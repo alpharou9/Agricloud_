@@ -619,15 +619,15 @@ Each service should have:
 ### Admin Features
 - [X] Dashboard with sidebar navigation
 - [X] Users CRUD (Add, Edit, Delete)
-- [ ] Roles CRUD (Add, Edit, Delete)
+- [X] Roles CRUD (Add, Edit, Delete)
 - [X] Search/filter users table
 - [X] Block/Unblock user toggle
 - [X] Statistics page (user counts, active/blocked users display)
 
 ### User Profile
-- [ ] Profile editing (name, email, phone)
-- [ ] Change password functionality
-- [ ] View role and status
+- [X] Profile editing (name, email, phone)
+- [X] Change password functionality
+- [X] View role and status
 
 ### Validation
 - [X] Email regex validation
