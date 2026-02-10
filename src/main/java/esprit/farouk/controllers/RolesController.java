@@ -66,9 +66,10 @@ public class RolesController {
             private final HBox actionBox = new HBox(5);
 
             {
-                editBtn.setStyle("-fx-background-color: #2196f3; -fx-text-fill: white; -fx-cursor: hand;");
-                deleteBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-cursor: hand;");
-                viewUsersBtn.setStyle("-fx-background-color: #4caf50; -fx-text-fill: white; -fx-cursor: hand; -fx-font-size: 11px;");
+                // Modern button styling with gradients and shadows
+                editBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #42a5f5, #2196f3); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                deleteBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #ef5350, #f44336); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                viewUsersBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #66bb6a, #4caf50); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 6px 12px; -fx-font-weight: bold; -fx-font-size: 11px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
 
                 editBtn.setOnAction(event -> {
                     Role role = getTableView().getItems().get(getIndex());
@@ -101,11 +102,23 @@ public class RolesController {
                     // Disable delete for protected roles
                     if (PROTECTED_ROLES.contains(role.getName())) {
                         deleteBtn.setDisable(true);
-                        deleteBtn.setStyle("-fx-background-color: #ccc; -fx-text-fill: #666; -fx-opacity: 0.6;");
+                        deleteBtn.setStyle("-fx-background-color: #e0e0e0; -fx-text-fill: #999; -fx-opacity: 0.6; -fx-background-radius: 8px; -fx-padding: 8px 16px;");
                     } else {
                         deleteBtn.setDisable(false);
-                        deleteBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-cursor: hand;");
+                        deleteBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #ef5350, #f44336); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
                     }
+
+                    // Add hover effects
+                    editBtn.setOnMouseEntered(e -> editBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #1e88e5, #1976d2); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 3); -fx-scale-x: 1.05; -fx-scale-y: 1.05;"));
+                    editBtn.setOnMouseExited(e -> editBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #42a5f5, #2196f3); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"));
+
+                    if (!PROTECTED_ROLES.contains(role.getName())) {
+                        deleteBtn.setOnMouseEntered(e -> deleteBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #e53935, #d32f2f); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 3); -fx-scale-x: 1.05; -fx-scale-y: 1.05;"));
+                        deleteBtn.setOnMouseExited(e -> deleteBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #ef5350, #f44336); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"));
+                    }
+
+                    viewUsersBtn.setOnMouseEntered(e -> viewUsersBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #5cb860, #45a049); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 6px 12px; -fx-font-weight: bold; -fx-font-size: 11px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 3); -fx-scale-x: 1.05; -fx-scale-y: 1.05;"));
+                    viewUsersBtn.setOnMouseExited(e -> viewUsersBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #66bb6a, #4caf50); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 6px 12px; -fx-font-weight: bold; -fx-font-size: 11px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"));
 
                     setGraphic(actionBox);
                 }
