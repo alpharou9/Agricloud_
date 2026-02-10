@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="esprit.farouk.controllers.LoginController"
+            prefHeight="600.0" prefWidth="900.0" styleClass="root">
+
+    <VBox alignment="CENTER" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+        <!-- Header -->
+        <VBox alignment="CENTER" spacing="10.0">
+            <Label text="🌾 AgriCloud" styleClass="app-title">
+                <font>
+                    <Font name="System Bold" size="48.0"/>
+                </font>
+            </Label>
+            <Label text="Smart Farm Management System" styleClass="app-subtitle">
+                <font>
+                    <Font size="18.0"/>
+                </font>
+            </Label>
+        </VBox>
+
+        <!-- Login Form -->
+        <VBox alignment="CENTER" spacing="20.0" styleClass="login-container" maxWidth="400.0">
+            <padding>
+                <Insets bottom="40.0" left="40.0" right="40.0" top="40.0"/>
+            </padding>
+
+            <Label text="Login to Your Account" styleClass="form-title">
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+            </Label>
+
+            <!-- Email Field -->
+            <VBox spacing="8.0">
+                <Label text="Email" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="emailField" promptText="Enter your email" styleClass="text-field"
+                           prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Password Field -->
+            <VBox spacing="8.0">
+                <Label text="Password" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <PasswordField fx:id="passwordField" promptText="Enter your password" styleClass="text-field"
+                               prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Error Label -->
+            <Label fx:id="errorLabel" textFill="RED" wrapText="true" visible="false" styleClass="error-label"/>
+
+            <!-- Login Button -->
+            <Button fx:id="loginButton" text="Login" onAction="#handleLogin" prefWidth="320.0" prefHeight="45.0"
+                    styleClass="primary-button">
+                <font>
+                    <Font name="System Bold" size="16.0"/>
+                </font>
+            </Button>
+
+            <!-- Links -->
+            <HBox alignment="CENTER" spacing="10.0">
+                <Label text="Don't have an account?" styleClass="link-label"/>
+                <Hyperlink fx:id="registerLink" text="Register" onAction="#handleRegister"
+                           styleClass="hyperlink"/>
+            </HBox>
+
+            <Hyperlink fx:id="forgotPasswordLink" text="Forgot Password?" onAction="#handleForgotPassword"
+                       styleClass="hyperlink" visible="false"/>
+
+            <!-- Guest Login -->
+            <Separator prefWidth="320.0">
+                <VBox.margin>
+                    <Insets top="10.0" bottom="10.0"/>
+                </VBox.margin>
+            </Separator>
+
+            <Button fx:id="guestButton" text="Continue as Guest" onAction="#handleGuestLogin" prefWidth="320.0"
+                    prefHeight="40.0" styleClass="secondary-button"/>
+
+        </VBox>
+
+        <!-- Footer -->
+        <Label text="© 2026 AgriCloud - Module 1: User Management" styleClass="footer-label">
+            <font>
+                <Font size="12.0"/>
+            </font>
+        </Label>
+
+    </VBox>
+
+</AnchorPane>

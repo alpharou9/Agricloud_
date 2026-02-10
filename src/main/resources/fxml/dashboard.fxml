@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="esprit.farouk.controllers.DashboardController" prefHeight="700.0" prefWidth="1200.0">
+
+    <!-- Sidebar -->
+    <left>
+        <VBox styleClass="sidebar" prefWidth="250.0" spacing="5.0">
+            <padding>
+                <Insets top="20.0" bottom="20.0"/>
+            </padding>
+
+            <!-- User Info -->
+            <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 20px;">
+                <Label fx:id="userNameLabel" text="Welcome, User" textFill="WHITE" styleClass="card-title"/>
+                <Label fx:id="userRoleLabel" text="Role: Admin" textFill="#c8e6c9"/>
+            </VBox>
+
+            <Separator style="-fx-background-color: rgba(255,255,255,0.2);"/>
+
+            <!-- Menu Items -->
+            <Button fx:id="dashboardBtn" text="📊 Dashboard" styleClass="sidebar-button, sidebar-button-active"
+                    maxWidth="Infinity" onAction="#showDashboard"/>
+            <Button fx:id="usersBtn" text="👥 Users" styleClass="sidebar-button" maxWidth="Infinity"
+                    onAction="#showUsers"/>
+            <Button fx:id="rolesBtn" text="🔑 Roles" styleClass="sidebar-button" maxWidth="Infinity"
+                    onAction="#showRoles"/>
+            <Button fx:id="profileBtn" text="👤 Profile" styleClass="sidebar-button" maxWidth="Infinity"
+                    onAction="#showProfile"/>
+
+            <!-- Spacer -->
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Logout Button -->
+            <Button fx:id="logoutBtn" text="🚪 Logout" styleClass="sidebar-button" maxWidth="Infinity"
+                    onAction="#handleLogout" style="-fx-background-color: #d32f2f;"/>
+        </VBox>
+    </left>
+
+    <!-- Content Area -->
+    <center>
+        <VBox styleClass="content-area" spacing="20.0">
+            <!-- Header -->
+            <HBox alignment="CENTER_LEFT" spacing="20.0">
+                <Label fx:id="pageTitle" text="Dashboard" styleClass="form-title">
+                    <font>
+                        <Font name="System Bold" size="32.0"/>
+                    </font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="dateTimeLabel" text="Date/Time" styleClass="field-label"/>
+            </HBox>
+
+            <Separator/>
+
+            <!-- Content Pane (will be replaced dynamically) -->
+            <StackPane fx:id="contentPane" VBox.vgrow="ALWAYS">
+                <!-- Default Dashboard View -->
+                <VBox alignment="CENTER" spacing="30.0">
+                    <Label text="🌾 Welcome to AgriCloud" styleClass="app-title">
+                        <font>
+                            <Font name="System Bold" size="36.0"/>
+                        </font>
+                    </Label>
+                    <Label text="User Management Module" styleClass="app-subtitle">
+                        <font>
+                            <Font size="20.0"/>
+                        </font>
+                    </Label>
+
+                    <!-- Quick Stats -->
+                    <GridPane hgap="20.0" vgap="20.0" alignment="CENTER">
+                        <VBox styleClass="card" alignment="CENTER" spacing="10.0" prefWidth="200.0" prefHeight="150.0"
+                              GridPane.columnIndex="0" GridPane.rowIndex="0">
+                            <Label text="Total Users" styleClass="field-label"/>
+                            <Label fx:id="totalUsersLabel" text="0" styleClass="app-title">
+                                <font>
+                                    <Font size="48.0"/>
+                                </font>
+                            </Label>
+                        </VBox>
+
+                        <VBox styleClass="card" alignment="CENTER" spacing="10.0" prefWidth="200.0" prefHeight="150.0"
+                              GridPane.columnIndex="1" GridPane.rowIndex="0">
+                            <Label text="Active Users" styleClass="field-label"/>
+                            <Label fx:id="activeUsersLabel" text="0" styleClass="app-title" textFill="#4caf50">
+                                <font>
+                                    <Font size="48.0"/>
+                                </font>
+                            </Label>
+                        </VBox>
+
+                        <VBox styleClass="card" alignment="CENTER" spacing="10.0" prefWidth="200.0" prefHeight="150.0"
+                              GridPane.columnIndex="2" GridPane.rowIndex="0">
+                            <Label text="Total Roles" styleClass="field-label"/>
+                            <Label fx:id="totalRolesLabel" text="0" styleClass="app-title" textFill="#2196f3">
+                                <font>
+                                    <Font size="48.0"/>
+                                </font>
+                            </Label>
+                        </VBox>
+                    </GridPane>
+
+                    <Label text="✓ Login System Working!" styleClass="success-label">
+                        <font>
+                            <Font size="18.0"/>
+                        </font>
+                    </Label>
+                </VBox>
+            </StackPane>
+        </VBox>
+    </center>
+
+</BorderPane>
