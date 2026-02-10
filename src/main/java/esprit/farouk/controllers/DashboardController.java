@@ -120,7 +120,7 @@ public class DashboardController {
     private void showUsers() {
         pageTitle.setText("Users Management");
         setActiveButton(usersBtn);
-        showAlert("Info", "Users management coming soon!", Alert.AlertType.INFORMATION);
+        loadContentPane("/fxml/users.fxml");
     }
 
     @FXML
@@ -178,6 +178,19 @@ public class DashboardController {
         // Add active class to clicked button
         if (!activeButton.getStyleClass().contains("sidebar-button-active")) {
             activeButton.getStyleClass().add("sidebar-button-active");
+        }
+    }
+
+    private void loadContentPane(String fxmlPath) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            javafx.scene.Node content = loader.load();
+            contentPane.getChildren().clear();
+            contentPane.getChildren().add(content);
+        } catch (Exception e) {
+            System.err.println("Failed to load content: " + fxmlPath);
+            e.printStackTrace();
+            showAlert("Error", "Failed to load content", Alert.AlertType.ERROR);
         }
     }
 

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="esprit.farouk.controllers.RegisterController"
+            prefHeight="700.0" prefWidth="900.0" styleClass="root">
+
+    <VBox alignment="CENTER" spacing="15.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+        <!-- Header -->
+        <VBox alignment="CENTER" spacing="5.0">
+            <Label text="🌾 AgriCloud" styleClass="app-title">
+                <font>
+                    <Font name="System Bold" size="36.0"/>
+                </font>
+            </Label>
+            <Label text="Create Your Account" styleClass="app-subtitle">
+                <font>
+                    <Font size="16.0"/>
+                </font>
+            </Label>
+        </VBox>
+
+        <!-- Register Form -->
+        <VBox alignment="CENTER" spacing="15.0" styleClass="login-container" maxWidth="450.0">
+            <padding>
+                <Insets bottom="30.0" left="40.0" right="40.0" top="30.0"/>
+            </padding>
+
+            <Label text="Register" styleClass="form-title">
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+            </Label>
+
+            <!-- Name Field -->
+            <VBox spacing="5.0">
+                <Label text="Full Name *" styleClass="field-label">
+                    <font>
+                        <Font size="13.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="nameField" promptText="Enter your full name" styleClass="text-field"
+                           prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Email Field -->
+            <VBox spacing="5.0">
+                <Label text="Email Address *" styleClass="field-label">
+                    <font>
+                        <Font size="13.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="emailField" promptText="Enter your email" styleClass="text-field"
+                           prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Phone Field -->
+            <VBox spacing="5.0">
+                <Label text="Phone Number (Optional)" styleClass="field-label">
+                    <font>
+                        <Font size="13.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="phoneField" promptText="+1234567890" styleClass="text-field"
+                           prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Role Selection -->
+            <VBox spacing="5.0">
+                <Label text="I am a *" styleClass="field-label">
+                    <font>
+                        <Font size="13.0"/>
+                    </font>
+                </Label>
+                <ComboBox fx:id="roleComboBox" promptText="Select your role" prefWidth="370.0" prefHeight="40.0"
+                          styleClass="text-field"/>
+            </VBox>
+
+            <!-- Password Field -->
+            <VBox spacing="5.0">
+                <Label text="Password *" styleClass="field-label">
+                    <font>
+                        <Font size="13.0"/>
+                    </font>
+                </Label>
+                <PasswordField fx:id="passwordField" promptText="Minimum 6 characters" styleClass="text-field"
+                               prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Confirm Password Field -->
+            <VBox spacing="5.0">
+                <Label text="Confirm Password *" styleClass="field-label">
+                    <font>
+                        <Font size="13.0"/>
+                    </font>
+                </Label>
+                <PasswordField fx:id="confirmPasswordField" promptText="Re-enter your password" styleClass="text-field"
+                               prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Error Label -->
+            <Label fx:id="errorLabel" textFill="RED" wrapText="true" visible="false" styleClass="error-label"/>
+
+            <!-- Success Label -->
+            <Label fx:id="successLabel" textFill="GREEN" wrapText="true" visible="false" styleClass="success-label"/>
+
+            <!-- Register Button -->
+            <Button fx:id="registerButton" text="Create Account" onAction="#handleRegister" prefWidth="370.0"
+                    prefHeight="45.0" styleClass="primary-button">
+                <font>
+                    <Font name="System Bold" size="16.0"/>
+                </font>
+            </Button>
+
+            <!-- Links -->
+            <HBox alignment="CENTER" spacing="10.0">
+                <Label text="Already have an account?" styleClass="link-label"/>
+                <Hyperlink fx:id="loginLink" text="Login" onAction="#handleBackToLogin" styleClass="hyperlink"/>
+            </HBox>
+
+        </VBox>
+
+        <!-- Footer -->
+        <Label text="© 2026 AgriCloud - Module 1: User Management" styleClass="footer-label">
+            <font>
+                <Font size="12.0"/>
+            </font>
+        </Label>
+
+    </VBox>
+
+</AnchorPane>
