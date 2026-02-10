@@ -609,20 +609,20 @@ Each service should have:
 ## Features to Implement (Module 1 Checklist)
 
 ### Core Authentication
-- [ ] Login screen with email/password
-- [ ] Register screen with role selection (Farmer/Customer only)
+- [X] Login screen with email/password
+- [X] Register screen with role selection (Farmer/Customer only)
 - [ ] Forgot password with email-based 6-digit code
-- [ ] Password hashing with BCrypt
-- [ ] Blocked user login prevention
-- [ ] Session management (store logged-in user)
+- [X] Password hashing with BCrypt
+- [X] Blocked user login prevention
+- [X] Session management (store logged-in user)
 
 ### Admin Features
-- [ ] Dashboard with sidebar navigation
-- [ ] Users CRUD (Add, Edit, Delete)
+- [X] Dashboard with sidebar navigation
+- [X] Users CRUD (Add, Edit, Delete)
 - [ ] Roles CRUD (Add, Edit, Delete)
-- [ ] Search/filter users table
-- [ ] Block/Unblock user toggle
-- [ ] Statistics page (user counts, pie chart by role, registrations chart)
+- [X] Search/filter users table
+- [X] Block/Unblock user toggle
+- [X] Statistics page (user counts, active/blocked users display)
 
 ### User Profile
 - [ ] Profile editing (name, email, phone)
@@ -630,11 +630,11 @@ Each service should have:
 - [ ] View role and status
 
 ### Validation
-- [ ] Email regex validation
-- [ ] Phone number validation
-- [ ] Name minimum 2 characters
-- [ ] Password strength validation
-- [ ] Unique email check
+- [X] Email regex validation
+- [X] Phone number validation
+- [X] Name minimum 2 characters
+- [X] Password strength validation
+- [X] Unique email check
 
 ### Guest Features (Basic)
 - [ ] Guest login creates temporary user
