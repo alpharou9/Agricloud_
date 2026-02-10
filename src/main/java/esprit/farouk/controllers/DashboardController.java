@@ -127,14 +127,14 @@ public class DashboardController {
     private void showRoles() {
         pageTitle.setText("Roles Management");
         setActiveButton(rolesBtn);
-        showAlert("Info", "Roles management coming soon!", Alert.AlertType.INFORMATION);
+        loadContentPane("/fxml/roles.fxml");
     }
 
     @FXML
     private void showProfile() {
         pageTitle.setText("My Profile");
         setActiveButton(profileBtn);
-        showAlert("Info", "Profile management coming soon!", Alert.AlertType.INFORMATION);
+        loadContentPane("/fxml/profile.fxml");
     }
 
     @FXML

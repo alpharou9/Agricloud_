@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="esprit.farouk.controllers.RolesController"
+      spacing="20.0" styleClass="content-area">
+
+    <padding>
+        <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+    </padding>
+
+    <!-- Header with Actions -->
+    <HBox alignment="CENTER_LEFT" spacing="15.0">
+        <Label text="Roles Management" styleClass="form-title">
+            <font>
+                <Font name="System Bold" size="28.0"/>
+            </font>
+        </Label>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <!-- Add Role Button -->
+        <Button fx:id="addButton" text="+ Add Role" onAction="#handleAddRole" prefHeight="35.0"
+                styleClass="primary-button">
+            <font>
+                <Font name="System Bold" size="13.0"/>
+            </font>
+        </Button>
+
+        <!-- Refresh Button -->
+        <Button fx:id="refreshButton" text="🔄" onAction="#handleRefresh" prefWidth="35.0" prefHeight="35.0"
+                styleClass="secondary-button"/>
+    </HBox>
+
+    <!-- Roles Table -->
+    <TableView fx:id="rolesTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="80.0">
+                <cellValueFactory>
+                    <PropertyValueFactory property="id"/>
+                </cellValueFactory>
+            </TableColumn>
+
+            <TableColumn fx:id="nameColumn" text="Role Name" prefWidth="200.0">
+                <cellValueFactory>
+                    <PropertyValueFactory property="name"/>
+                </cellValueFactory>
+            </TableColumn>
+
+            <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="400.0">
+                <cellValueFactory>
+                    <PropertyValueFactory property="description"/>
+                </cellValueFactory>
+            </TableColumn>
+
+            <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="200.0" sortable="false">
+            </TableColumn>
+        </columns>
+
+        <placeholder>
+            <Label text="No roles found" styleClass="field-label"/>
+        </placeholder>
+    </TableView>
+
+    <!-- Footer with Stats -->
+    <HBox alignment="CENTER_LEFT" spacing="20.0">
+        <Label fx:id="statsLabel" text="Total Roles: 0" styleClass="field-label">
+            <font>
+                <Font size="14.0"/>
+            </font>
+        </Label>
+
+        <Label text="ℹ System roles (Admin, Farmer, Customer, Guest) are protected" style="-fx-text-fill: #666;">
+            <font>
+                <Font size="12.0"/>
+            </font>
+        </Label>
+    </HBox>
+
+</VBox>
