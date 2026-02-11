@@ -8,8 +8,8 @@ public class EmailUtils {
     // Gmail SMTP Configuration
     private static final String SMTP_HOST = "smtp.gmail.com";
     private static final String SMTP_PORT = "465"; // SSL port
-    private static final String SENDER_EMAIL = "your-email@gmail.com"; // TODO: Change this
-    private static final String SENDER_PASSWORD = "your-app-password"; // TODO: Use Gmail App Password
+    private static final String SENDER_EMAIL = "farouknakkach@gmail.com"; // TODO: Change this
+    private static final String SENDER_PASSWORD = "fsqmwfikwjmjeygj"; // TODO: Use Gmail App Password
 
     /**
      * Sends an email using Gmail SMTP
@@ -53,7 +53,37 @@ public class EmailUtils {
     }
 
     /**
-     * Sends password reset email with 6-digit code
+     * Sends password reset code via email (throws MessagingException)
+     */
+    public static void sendResetCode(String toEmail, String code) throws MessagingException {
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.ssl.enable", "true");
+        props.put("mail.smtp.host", SMTP_HOST);
+        props.put("mail.smtp.port", SMTP_PORT);
+        props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(SENDER_EMAIL, SENDER_PASSWORD);
+            }
+        });
+
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(SENDER_EMAIL));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+        message.setSubject("AgriCloud - Password Reset Code");
+        message.setText("Hello,\n\nYour password reset code is: " + code +
+                "\n\nThis code will expire shortly. If you did not request this, please ignore this email." +
+                "\n\nAgriCloud Team");
+
+        Transport.send(message);
+        System.out.println("✓ Reset code sent to: " + toEmail);
+    }
+
+    /**
+     * Sends password reset email with 6-digit code (returns boolean)
      */
     public static boolean sendPasswordResetEmail(String recipientEmail, String resetCode) {
         String subject = "AgriCloud - Password Reset Code";
@@ -70,5 +100,44 @@ public class EmailUtils {
                      "</body></html>";
 
         return sendEmail(recipientEmail, subject, body);
+    }
+
+    /**
+     * Sends order confirmation email
+     */
+    public static void sendOrderConfirmation(String toEmail, String customerName, long orderId, double totalAmount) throws MessagingException {
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.ssl.enable", "true");
+        props.put("mail.smtp.host", SMTP_HOST);
+        props.put("mail.smtp.port", SMTP_PORT);
+        props.put("mail.smtp.ssl.trust", "smtp.gmail.com");
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(SENDER_EMAIL, SENDER_PASSWORD);
+            }
+        });
+
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(SENDER_EMAIL));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
+        message.setSubject("AgriCloud - Order Confirmation #" + orderId);
+
+        String emailBody = "Dear " + customerName + ",\n\n" +
+                "Thank you for your order on AgriCloud!\n\n" +
+                "Order Details:\n" +
+                "Order Number: #" + orderId + "\n" +
+                "Total Amount: $" + String.format("%.2f", totalAmount) + "\n\n" +
+                "Your order has been confirmed and will be delivered to you within 3 business days maximum.\n\n" +
+                "We will keep you updated on the status of your order.\n\n" +
+                "Thank you for choosing AgriCloud!\n\n" +
+                "Best regards,\n" +
+                "The AgriCloud Team";
+
+        message.setText(emailBody);
+        Transport.send(message);
+        System.out.println("✓ Order confirmation sent to: " + toEmail);
     }
 }

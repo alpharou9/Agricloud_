@@ -79,7 +79,7 @@
             </HBox>
 
             <Hyperlink fx:id="forgotPasswordLink" text="Forgot Password?" onAction="#handleForgotPassword"
-                       styleClass="hyperlink" visible="false"/>
+                       styleClass="hyperlink"/>
 
             <!-- Guest Login -->
             <Separator prefWidth="320.0">

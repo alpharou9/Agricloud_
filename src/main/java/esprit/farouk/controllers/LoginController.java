@@ -108,8 +108,17 @@ public class LoginController {
 
     @FXML
     private void handleForgotPassword() {
-        // TODO: Implement forgot password (requires password_resets table)
-        showError("Forgot password feature coming soon!");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/forgot_password.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) forgotPasswordLink.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setTitle("AgriCloud - Forgot Password");
+        } catch (Exception e) {
+            showError("Failed to load forgot password page");
+            e.printStackTrace();
+        }
     }
 
     @FXML
