@@ -12,51 +12,43 @@
 
     <!-- Sidebar -->
     <left>
-        <VBox styleClass="sidebar" prefWidth="250.0" spacing="0">
+        <VBox style="-fx-background-color: linear-gradient(to bottom, #1b5e20, #2e7d32);" prefWidth="200.0" spacing="0">
             <padding>
                 <Insets top="25.0" bottom="25.0"/>
             </padding>
 
-            <!-- User Info Card -->
-            <VBox alignment="CENTER" spacing="12.0" style="-fx-padding: 20px; -fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 10px;">
+            <!-- Brand Header -->
+            <VBox alignment="CENTER_LEFT" spacing="5.0">
                 <VBox.margin>
-                    <Insets left="15.0" right="15.0" bottom="20.0"/>
+                    <Insets left="20.0" right="20.0" bottom="30.0"/>
                 </VBox.margin>
-
-                <!-- User Avatar Circle -->
-                <StackPane style="-fx-background-color: white; -fx-background-radius: 50px; -fx-pref-width: 80px; -fx-pref-height: 80px;">
-                    <Label text="👤" style="-fx-font-size: 40px;"/>
-                </StackPane>
-
-                <Label fx:id="userNameLabel" text="Welcome, User" textFill="WHITE"
-                       style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-                <Label fx:id="userRoleLabel" text="Role: Admin"
-                       style="-fx-text-fill: #a5d6a7; -fx-font-size: 13px;"/>
+                <Label text="AgriCloud" style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+                <Label fx:id="userNameLabel" text="Welcome, admin" style="-fx-text-fill: #a5d6a7; -fx-font-size: 13px;"/>
             </VBox>
 
             <!-- Menu Items -->
-            <VBox spacing="3.0">
-                <VBox.margin>
-                    <Insets top="10.0"/>
-                </VBox.margin>
-
-                <Button fx:id="dashboardBtn" text="📊  Dashboard" styleClass="sidebar-button, sidebar-button-active"
-                        maxWidth="Infinity" onAction="#showDashboard">
+            <VBox spacing="2.0">
+                <Button fx:id="dashboardBtn" text="Home" styleClass="sidebar-button, sidebar-button-active"
+                        maxWidth="Infinity" onAction="#showDashboard"
+                        style="-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 14px 20px; -fx-border-width: 0 0 0 4px; -fx-border-color: #66bb6a; -fx-background-radius: 0; -fx-background-insets: 0;">
                     <font><Font size="14.0"/></font>
                 </Button>
 
-                <Button fx:id="usersBtn" text="👥  Users" styleClass="sidebar-button" maxWidth="Infinity"
-                        onAction="#showUsers">
+                <Button fx:id="usersBtn" text="Users" styleClass="sidebar-button" maxWidth="Infinity"
+                        onAction="#showUsers"
+                        style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 14px 20px; -fx-background-radius: 0; -fx-background-insets: 0;">
                     <font><Font size="14.0"/></font>
                 </Button>
 
-                <Button fx:id="rolesBtn" text="🔑  Roles" styleClass="sidebar-button" maxWidth="Infinity"
-                        onAction="#showRoles">
+                <Button fx:id="rolesBtn" text="Roles" styleClass="sidebar-button" maxWidth="Infinity"
+                        onAction="#showRoles"
+                        style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 14px 20px; -fx-background-radius: 0; -fx-background-insets: 0;">
                     <font><Font size="14.0"/></font>
                 </Button>
 
-                <Button fx:id="profileBtn" text="👤  Profile" styleClass="sidebar-button" maxWidth="Infinity"
-                        onAction="#showProfile">
+                <Button fx:id="profileBtn" text="Profile" styleClass="sidebar-button" maxWidth="Infinity"
+                        onAction="#showProfile"
+                        style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 14px 20px; -fx-background-radius: 0; -fx-background-insets: 0;">
                     <font><Font size="14.0"/></font>
                 </Button>
             </VBox>
@@ -65,11 +57,11 @@
             <Region VBox.vgrow="ALWAYS"/>
 
             <!-- Logout Button -->
-            <Button fx:id="logoutBtn" text="🚪  Logout" maxWidth="Infinity"
+            <Button fx:id="logoutBtn" text="Logout" maxWidth="Infinity"
                     onAction="#handleLogout"
-                    style="-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 14px; -fx-background-radius: 8px; -fx-cursor: hand;">
+                    style="-fx-background-color: #ff6b6b; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 12px 20px; -fx-background-radius: 0; -fx-cursor: hand; -fx-alignment: center-left;">
                 <VBox.margin>
-                    <Insets left="15.0" right="15.0" top="10.0"/>
+                    <Insets top="10.0"/>
                 </VBox.margin>
             </Button>
         </VBox>
@@ -79,84 +71,62 @@
     <center>
         <VBox style="-fx-background-color: #f5f7fa;" spacing="0">
 
-            <!-- Top Header Bar -->
-            <HBox alignment="CENTER_LEFT" spacing="20.0"
-                  style="-fx-background-color: white; -fx-padding: 20px 30px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-
-                <Label fx:id="pageTitle" text="Dashboard" style="-fx-text-fill: #2e7d32; -fx-font-weight: bold;">
-                    <font><Font size="28.0"/></font>
-                </Label>
-
-                <Region HBox.hgrow="ALWAYS"/>
-
-                <Label fx:id="dateTimeLabel" text="Date/Time"
-                       style="-fx-text-fill: #666; -fx-font-size: 13px;"/>
-            </HBox>
-
             <!-- Content Pane (Dynamic Content) -->
             <StackPane fx:id="contentPane" VBox.vgrow="ALWAYS" style="-fx-background-color: #f5f7fa;">
                 <padding>
-                    <Insets top="30.0" right="30.0" bottom="30.0" left="30.0"/>
+                    <Insets top="40.0" right="40.0" bottom="40.0" left="40.0"/>
                 </padding>
 
                 <!-- Default Dashboard View -->
-                <VBox alignment="CENTER" spacing="40.0">
+                <VBox alignment="TOP_CENTER" spacing="40.0">
 
-                    <!-- Welcome Header -->
-                    <VBox alignment="CENTER" spacing="10.0">
-                        <Label text="🌾 Welcome to AgriCloud" style="-fx-text-fill: #2e7d32; -fx-font-weight: bold;">
-                            <font><Font size="42.0"/></font>
+                    <!-- Welcome Card -->
+                    <VBox alignment="CENTER" spacing="15.0" styleClass="card" maxWidth="800.0">
+                        <padding>
+                            <Insets top="40.0" right="60.0" bottom="40.0" left="60.0"/>
+                        </padding>
+
+                        <Label text="Welcome back, admin!" style="-fx-text-fill: #2e7d32; -fx-font-weight: bold;">
+                            <font><Font size="32.0"/></font>
                         </Label>
-                        <Label text="Smart Farm Management System" style="-fx-text-fill: #4caf50;">
-                            <font><Font size="18.0"/></font>
-                        </Label>
-                    </VBox>
+                        <Label fx:id="dateTimeLabel" text="Tuesday, February 10, 2026 | Admin"
+                               style="-fx-text-fill: #666; -fx-font-size: 14px;"/>
 
-                    <!-- Statistics Cards -->
-                    <GridPane hgap="25.0" vgap="25.0" alignment="CENTER">
+                        <!-- Statistics Cards Row -->
+                        <HBox spacing="15.0" alignment="CENTER">
+                            <VBox.margin>
+                                <Insets top="20.0"/>
+                            </VBox.margin>
 
-                        <!-- Total Users Card -->
-                        <VBox styleClass="card" alignment="CENTER" spacing="15.0"
-                              prefWidth="220.0" prefHeight="180.0"
-                              GridPane.columnIndex="0" GridPane.rowIndex="0">
-                            <Label text="👥" style="-fx-font-size: 40px;"/>
-                            <Label text="Total Users" style="-fx-text-fill: #666; -fx-font-weight: bold; -fx-font-size: 14px;"/>
-                            <Label fx:id="totalUsersLabel" text="0" style="-fx-text-fill: #2e7d32; -fx-font-weight: bold;">
-                                <font><Font size="52.0"/></font>
-                            </Label>
-                        </VBox>
+                            <!-- Blue Card - Total Users -->
+                            <VBox alignment="CENTER" spacing="8.0" prefWidth="120.0" prefHeight="100.0"
+                                  style="-fx-background-color: #4285f4; -fx-background-radius: 12px; -fx-padding: 15px;">
+                                <Label fx:id="totalUsersLabel" text="11" style="-fx-text-fill: white; -fx-font-weight: bold;">
+                                    <font><Font size="36.0"/></font>
+                                </Label>
+                                <Label text="Total Users" style="-fx-text-fill: white; -fx-font-size: 12px;"/>
+                            </VBox>
 
-                        <!-- Active Users Card -->
-                        <VBox styleClass="card" alignment="CENTER" spacing="15.0"
-                              prefWidth="220.0" prefHeight="180.0"
-                              GridPane.columnIndex="1" GridPane.rowIndex="0">
-                            <Label text="✅" style="-fx-font-size: 40px;"/>
-                            <Label text="Active Users" style="-fx-text-fill: #666; -fx-font-weight: bold; -fx-font-size: 14px;"/>
-                            <Label fx:id="activeUsersLabel" text="0" style="-fx-text-fill: #4caf50; -fx-font-weight: bold;">
-                                <font><Font size="52.0"/></font>
-                            </Label>
-                        </VBox>
+                            <!-- Teal Card - Active Users (placeholder for "Total Farms") -->
+                            <VBox alignment="CENTER" spacing="8.0" prefWidth="120.0" prefHeight="100.0"
+                                  style="-fx-background-color: #00bfa5; -fx-background-radius: 12px; -fx-padding: 15px;">
+                                <Label fx:id="activeUsersLabel" text="11" style="-fx-text-fill: white; -fx-font-weight: bold;">
+                                    <font><Font size="36.0"/></font>
+                                </Label>
+                                <Label text="Active Users" style="-fx-text-fill: white; -fx-font-size: 12px;"/>
+                            </VBox>
 
-                        <!-- Total Roles Card -->
-                        <VBox styleClass="card" alignment="CENTER" spacing="15.0"
-                              prefWidth="220.0" prefHeight="180.0"
-                              GridPane.columnIndex="2" GridPane.rowIndex="0">
-                            <Label text="🔑" style="-fx-font-size: 40px;"/>
-                            <Label text="Total Roles" style="-fx-text-fill: #666; -fx-font-weight: bold; -fx-font-size: 14px;"/>
-                            <Label fx:id="totalRolesLabel" text="0" style="-fx-text-fill: #2196f3; -fx-font-weight: bold;">
-                                <font><Font size="52.0"/></font>
-                            </Label>
-                        </VBox>
+                            <!-- Purple Card - Total Roles -->
+                            <VBox alignment="CENTER" spacing="8.0" prefWidth="120.0" prefHeight="100.0"
+                                  style="-fx-background-color: #9c27b0; -fx-background-radius: 12px; -fx-padding: 15px;">
+                                <Label fx:id="totalRolesLabel" text="4" style="-fx-text-fill: white; -fx-font-weight: bold;">
+                                    <font><Font size="36.0"/></font>
+                                </Label>
+                                <Label text="Total Roles" style="-fx-text-fill: white; -fx-font-size: 12px;"/>
+                            </VBox>
 
-                    </GridPane>
+                        </HBox>
 
-                    <!-- Success Message -->
-                    <VBox alignment="CENTER" spacing="10.0"
-                          style="-fx-background-color: #e8f5e9; -fx-padding: 20px 40px; -fx-background-radius: 12px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
-                        <Label text="✓ Login System Working!" style="-fx-text-fill: #2e7d32; -fx-font-weight: bold;">
-                            <font><Font size="20.0"/></font>
-                        </Label>
-                        <Label text="All core features are operational" style="-fx-text-fill: #4caf50; -fx-font-size: 14px;"/>
                     </VBox>
 
                 </VBox>

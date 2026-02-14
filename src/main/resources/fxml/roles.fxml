@@ -8,78 +8,96 @@
 
 <VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="esprit.farouk.controllers.RolesController"
-      spacing="20.0" styleClass="content-area">
+      spacing="0" style="-fx-background-color: #f5f7fa;">
 
     <padding>
-        <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+        <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
     </padding>
 
-    <!-- Header with Actions -->
-    <HBox alignment="CENTER_LEFT" spacing="15.0">
-        <Label text="Roles Management" styleClass="form-title">
-            <font>
-                <Font name="System Bold" size="28.0"/>
-            </font>
-        </Label>
+    <!-- Main Card Container -->
+    <VBox styleClass="card" spacing="20.0" VBox.vgrow="ALWAYS">
+        <padding>
+            <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+        </padding>
 
-        <Region HBox.hgrow="ALWAYS"/>
+        <!-- Header with Actions -->
+        <HBox alignment="CENTER_LEFT" spacing="15.0">
+            <Label text="🔑 Roles Management" styleClass="card-title">
+                <font>
+                    <Font name="System Bold" size="24.0"/>
+                </font>
+            </Label>
 
-        <!-- Add Role Button -->
-        <Button fx:id="addButton" text="+ Add Role" onAction="#handleAddRole" prefHeight="35.0"
-                styleClass="primary-button">
-            <font>
-                <Font name="System Bold" size="13.0"/>
-            </font>
-        </Button>
+            <Region HBox.hgrow="ALWAYS"/>
 
-        <!-- Refresh Button -->
-        <Button fx:id="refreshButton" text="🔄" onAction="#handleRefresh" prefWidth="35.0" prefHeight="35.0"
-                styleClass="secondary-button"/>
-    </HBox>
+            <!-- Add Role Button -->
+            <Button fx:id="addButton" text="+ Add Role" onAction="#handleAddRole" prefHeight="40.0"
+                    styleClass="primary-button">
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Button>
 
-    <!-- Roles Table -->
-    <TableView fx:id="rolesTable" VBox.vgrow="ALWAYS" styleClass="table-view">
-        <columns>
-            <TableColumn fx:id="idColumn" text="ID" prefWidth="80.0">
-                <cellValueFactory>
-                    <PropertyValueFactory property="id"/>
-                </cellValueFactory>
-            </TableColumn>
+            <!-- Refresh Button -->
+            <Button fx:id="refreshButton" text="🔄" onAction="#handleRefresh" prefWidth="40.0" prefHeight="40.0"
+                    styleClass="secondary-button">
+                <font>
+                    <Font size="16.0"/>
+                </font>
+            </Button>
+        </HBox>
 
-            <TableColumn fx:id="nameColumn" text="Role Name" prefWidth="200.0">
-                <cellValueFactory>
-                    <PropertyValueFactory property="name"/>
-                </cellValueFactory>
-            </TableColumn>
+        <!-- Separator -->
+        <Separator/>
 
-            <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="400.0">
-                <cellValueFactory>
-                    <PropertyValueFactory property="description"/>
-                </cellValueFactory>
-            </TableColumn>
+        <!-- Roles Table -->
+        <TableView fx:id="rolesTable" VBox.vgrow="ALWAYS" styleClass="table-view">
+            <columns>
+                <TableColumn fx:id="idColumn" text="ID" prefWidth="80.0">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="id"/>
+                    </cellValueFactory>
+                </TableColumn>
 
-            <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="200.0" sortable="false">
-            </TableColumn>
-        </columns>
+                <TableColumn fx:id="nameColumn" text="Role Name" prefWidth="200.0">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="name"/>
+                    </cellValueFactory>
+                </TableColumn>
 
-        <placeholder>
-            <Label text="No roles found" styleClass="field-label"/>
-        </placeholder>
-    </TableView>
+                <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="400.0">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="description"/>
+                    </cellValueFactory>
+                </TableColumn>
 
-    <!-- Footer with Stats -->
-    <HBox alignment="CENTER_LEFT" spacing="20.0">
-        <Label fx:id="statsLabel" text="Total Roles: 0" styleClass="field-label">
-            <font>
-                <Font size="14.0"/>
-            </font>
-        </Label>
+                <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="200.0" sortable="false">
+                </TableColumn>
+            </columns>
 
-        <Label text="ℹ System roles (Admin, Farmer, Customer, Guest) are protected" style="-fx-text-fill: #666;">
-            <font>
-                <Font size="12.0"/>
-            </font>
-        </Label>
-    </HBox>
+            <placeholder>
+                <Label text="No roles found" style="-fx-text-fill: #999; -fx-font-size: 16px;"/>
+            </placeholder>
+        </TableView>
+
+        <!-- Separator -->
+        <Separator/>
+
+        <!-- Footer with Stats -->
+        <HBox alignment="CENTER_LEFT" spacing="20.0">
+            <padding>
+                <Insets top="5.0"/>
+            </padding>
+
+            <Label fx:id="statsLabel" text="Total Roles: 0" style="-fx-text-fill: #2e7d32; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+
+            <Label text="ℹ System roles (Admin, Farmer, Customer, Guest) are protected" styleClass="badge-info">
+                <font>
+                    <Font size="12.0"/>
+                </font>
+            </Label>
+        </HBox>
+
+    </VBox>
 
 </VBox>

@@ -15,6 +15,14 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // OAuth fields
+    private String oauthProvider; // google, facebook, apple, null
+    private String oauthId; // OAuth user ID from provider
+
+    // Face recognition fields
+    private String faceEmbeddings; // JSON array of face embeddings
+    private LocalDateTime faceEnrolledAt; // Timestamp when face was enrolled
+
     // Transient field for display (from JOIN with roles table)
     private String roleName;
 
@@ -82,12 +90,24 @@ public class User {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
+    public String getOauthProvider() { return oauthProvider; }
+    public void setOauthProvider(String oauthProvider) { this.oauthProvider = oauthProvider; }
+
+    public String getOauthId() { return oauthId; }
+    public void setOauthId(String oauthId) { this.oauthId = oauthId; }
+
     public String getRoleName() { return roleName; }
     public void setRoleName(String roleName) { this.roleName = roleName; }
+
+    public String getFaceEmbeddings() { return faceEmbeddings; }
+    public void setFaceEmbeddings(String faceEmbeddings) { this.faceEmbeddings = faceEmbeddings; }
+
+    public LocalDateTime getFaceEnrolledAt() { return faceEnrolledAt; }
+    public void setFaceEnrolledAt(LocalDateTime faceEnrolledAt) { this.faceEnrolledAt = faceEnrolledAt; }
 
     @Override
     public String toString() {
         return "User{id=" + id + ", name='" + name + "', email='" + email +
-               "', role=" + roleName + ", status='" + status + "'}";
+               "', role=" + roleName + ", status='" + status + "', oauth=" + oauthProvider + "'}";
     }
 }

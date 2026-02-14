@@ -113,10 +113,56 @@ public class LoginController {
             Parent root = loader.load();
 
             Stage stage = (Stage) forgotPasswordLink.getScene().getWindow();
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
             stage.setTitle("AgriCloud - Forgot Password");
         } catch (Exception e) {
             showError("Failed to load forgot password page");
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleGoogleLogin() {
+        try {
+            // Show Google OAuth login dialog
+            OAuthLoginDialog oauthDialog = new OAuthLoginDialog();
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            User user = oauthDialog.showGoogleLogin(stage);
+
+            if (user != null) {
+                // Check if user is blocked
+                if ("blocked".equals(user.getStatus())) {
+                    showError("Your account has been blocked. Please contact support.");
+                    return;
+                }
+
+                // Login successful - set session
+                SessionManager.setCurrentUser(user);
+
+                // Navigate to dashboard
+                navigateToDashboard();
+            }
+        } catch (Exception e) {
+            showError("Google sign-in failed: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void handleFaceLogin() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/face_login.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            Scene scene = new Scene(root, 900, 700);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
+            stage.setTitle("AgriCloud - Face Login");
+        } catch (Exception e) {
+            showError("Failed to load face login: " + e.getMessage());
             e.printStackTrace();
         }
     }

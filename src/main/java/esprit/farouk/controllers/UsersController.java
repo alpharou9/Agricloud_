@@ -89,11 +89,11 @@ public class UsersController {
             private final HBox actionBox = new HBox(5);
 
             {
-                // Modern button styling
-                editBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #42a5f5, #2196f3); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
-                deleteBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #ef5350, #f44336); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
-                blockBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #ffa726, #ff9800); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
-                unblockBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #66bb6a, #4caf50); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                // Modern button styling with solid colors and shadows
+                editBtn.setStyle("-fx-background-color: #2196f3; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                deleteBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                blockBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                unblockBtn.setStyle("-fx-background-color: #4caf50; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
 
                 editBtn.setOnAction(event -> {
                     User user = getTableView().getItems().get(getIndex());
@@ -137,18 +137,56 @@ public class UsersController {
                         actionBox.getChildren().add(blockBtn);
                     }
 
+                    // Reapply base button styles
+                    editBtn.setStyle("-fx-background-color: #2196f3; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                    deleteBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                    blockBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                    unblockBtn.setStyle("-fx-background-color: #4caf50; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+
                     // Add hover effects
-                    editBtn.setOnMouseEntered(e -> editBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #1e88e5, #1976d2); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 3); -fx-scale-x: 1.05; -fx-scale-y: 1.05;"));
-                    editBtn.setOnMouseExited(e -> editBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #42a5f5, #2196f3); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"));
+                    editBtn.setOnMouseEntered(e -> {
+                        editBtn.setStyle("-fx-background-color: #1976d2; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 8, 0, 0, 3);");
+                        editBtn.setScaleX(1.05);
+                        editBtn.setScaleY(1.05);
+                    });
+                    editBtn.setOnMouseExited(e -> {
+                        editBtn.setStyle("-fx-background-color: #2196f3; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                        editBtn.setScaleX(1.0);
+                        editBtn.setScaleY(1.0);
+                    });
 
-                    deleteBtn.setOnMouseEntered(e -> deleteBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #e53935, #d32f2f); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 3); -fx-scale-x: 1.05; -fx-scale-y: 1.05;"));
-                    deleteBtn.setOnMouseExited(e -> deleteBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #ef5350, #f44336); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"));
+                    deleteBtn.setOnMouseEntered(e -> {
+                        deleteBtn.setStyle("-fx-background-color: #d32f2f; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 8, 0, 0, 3);");
+                        deleteBtn.setScaleX(1.05);
+                        deleteBtn.setScaleY(1.05);
+                    });
+                    deleteBtn.setOnMouseExited(e -> {
+                        deleteBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                        deleteBtn.setScaleX(1.0);
+                        deleteBtn.setScaleY(1.0);
+                    });
 
-                    blockBtn.setOnMouseEntered(e -> blockBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #fb8c00, #f57c00); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 3); -fx-scale-x: 1.05; -fx-scale-y: 1.05;"));
-                    blockBtn.setOnMouseExited(e -> blockBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #ffa726, #ff9800); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"));
+                    blockBtn.setOnMouseEntered(e -> {
+                        blockBtn.setStyle("-fx-background-color: #f57c00; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 8, 0, 0, 3);");
+                        blockBtn.setScaleX(1.05);
+                        blockBtn.setScaleY(1.05);
+                    });
+                    blockBtn.setOnMouseExited(e -> {
+                        blockBtn.setStyle("-fx-background-color: #ff9800; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                        blockBtn.setScaleX(1.0);
+                        blockBtn.setScaleY(1.0);
+                    });
 
-                    unblockBtn.setOnMouseEntered(e -> unblockBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #5cb860, #45a049); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 3); -fx-scale-x: 1.05; -fx-scale-y: 1.05;"));
-                    unblockBtn.setOnMouseExited(e -> unblockBtn.setStyle("-fx-background-color: linear-gradient(to bottom, #66bb6a, #4caf50); -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);"));
+                    unblockBtn.setOnMouseEntered(e -> {
+                        unblockBtn.setStyle("-fx-background-color: #45a049; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 8, 0, 0, 3);");
+                        unblockBtn.setScaleX(1.05);
+                        unblockBtn.setScaleY(1.05);
+                    });
+                    unblockBtn.setOnMouseExited(e -> {
+                        unblockBtn.setStyle("-fx-background-color: #4caf50; -fx-text-fill: white; -fx-cursor: hand; -fx-background-radius: 8px; -fx-padding: 8px 16px; -fx-font-weight: bold; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);");
+                        unblockBtn.setScaleX(1.0);
+                        unblockBtn.setScaleY(1.0);
+                    });
 
                     setGraphic(actionBox);
                 }

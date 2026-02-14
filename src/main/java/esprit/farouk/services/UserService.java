@@ -44,6 +44,17 @@ public class UserService {
             user.setUpdatedAt(updatedAt.toLocalDateTime());
         }
 
+        // Get OAuth fields
+        user.setOauthProvider(rs.getString("oauth_provider"));
+        user.setOauthId(rs.getString("oauth_id"));
+
+        // Get face recognition fields
+        user.setFaceEmbeddings(rs.getString("face_embeddings"));
+        Timestamp faceEnrolled = rs.getTimestamp("face_enrolled_at");
+        if (faceEnrolled != null) {
+            user.setFaceEnrolledAt(faceEnrolled.toLocalDateTime());
+        }
+
         // Get role name if available (from JOIN)
         try {
             String roleName = rs.getString("role_name");
@@ -359,5 +370,185 @@ public class UserService {
             e.printStackTrace();
         }
         return users;
+    }
+
+    /**
+     * Gets a user by OAuth provider and OAuth ID
+     */
+    public User getByOAuthId(String provider, String oauthId) {
+        String sql = "SELECT u.*, r.name as role_name FROM users u " +
+                     "LEFT JOIN roles r ON u.role_id = r.id " +
+                     "WHERE u.oauth_provider = ? AND u.oauth_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, provider);
+            stmt.setString(2, oauthId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return mapRow(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("✗ Failed to get user by OAuth ID: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Creates or updates a user from OAuth login
+     * If user with email exists, link OAuth account
+     * If not, create new user
+     */
+    public User createOrUpdateOAuthUser(String provider, String oauthId, String email, String name, String profilePicture) {
+        try {
+            // Check if OAuth user already exists
+            User existingOAuthUser = getByOAuthId(provider, oauthId);
+            if (existingOAuthUser != null) {
+                System.out.println("✓ OAuth user found, logging in: " + email);
+                return existingOAuthUser;
+            }
+
+            // Check if user with this email already exists
+            User existingEmailUser = getByEmail(email);
+            if (existingEmailUser != null) {
+                // Link OAuth account to existing user
+                linkOAuthAccount(existingEmailUser.getId(), provider, oauthId);
+                System.out.println("✓ OAuth account linked to existing user: " + email);
+                return getById(existingEmailUser.getId());
+            }
+
+            // Create new OAuth user
+            // Get Customer role by default (role_id = 3)
+            String sql = "INSERT INTO users (role_id, name, email, oauth_provider, oauth_id, profile_picture, status) " +
+                         "VALUES (3, ?, ?, ?, ?, ?, 'active')";
+
+            try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setString(1, name);
+                stmt.setString(2, email);
+                stmt.setString(3, provider);
+                stmt.setString(4, oauthId);
+                stmt.setString(5, profilePicture);
+
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    ResultSet rs = stmt.getGeneratedKeys();
+                    if (rs.next()) {
+                        long userId = rs.getLong(1);
+                        System.out.println("✓ New OAuth user created: " + email);
+                        return getById(userId);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("✗ Failed to create/update OAuth user: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Links an OAuth account to an existing user
+     */
+    private void linkOAuthAccount(long userId, String provider, String oauthId) {
+        String sql = "UPDATE users SET oauth_provider = ?, oauth_id = ? WHERE id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, provider);
+            stmt.setString(2, oauthId);
+            stmt.setLong(3, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("✗ Failed to link OAuth account: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // ============================================================
+    // Face Recognition Methods
+    // ============================================================
+
+    /**
+     * Enrolls face embeddings for a user
+     */
+    public boolean enrollFaceEmbeddings(long userId, String embeddingsJson) {
+        String sql = "UPDATE users SET face_embeddings = ?, face_enrolled_at = NOW() WHERE id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, embeddingsJson);
+            stmt.setLong(2, userId);
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("✓ Face embeddings enrolled for user ID: " + userId);
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println("✗ Failed to enroll face embeddings: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Gets all users who have enrolled their faces
+     */
+    public List<User> getAllFaceEnabledUsers() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT u.*, r.name as role_name FROM users u " +
+                     "LEFT JOIN roles r ON u.role_id = r.id " +
+                     "WHERE u.face_embeddings IS NOT NULL " +
+                     "AND u.face_enrolled_at IS NOT NULL " +
+                     "AND u.status = 'active'";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                users.add(mapRow(rs));
+            }
+            System.out.println("✓ Found " + users.size() + " users with face enrollment");
+        } catch (SQLException e) {
+            System.err.println("✗ Failed to get face-enabled users: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return users;
+    }
+
+    /**
+     * Checks if a user has face enrollment
+     */
+    public boolean hasFaceEnrollment(long userId) {
+        String sql = "SELECT face_embeddings FROM users WHERE id = ? AND face_embeddings IS NOT NULL";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            System.err.println("✗ Failed to check face enrollment: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Removes face enrollment data for a user
+     */
+    public boolean removeFaceEnrollment(long userId) {
+        String sql = "UPDATE users SET face_embeddings = NULL, face_enrolled_at = NULL WHERE id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, userId);
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                System.out.println("✓ Face enrollment removed for user ID: " + userId);
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println("✗ Failed to remove face enrollment: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
     }
 }

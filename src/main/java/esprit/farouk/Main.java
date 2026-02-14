@@ -21,7 +21,8 @@ public class Main extends Application {
         // Configure stage
         primaryStage.setTitle("AgriCloud - Login");
         primaryStage.setScene(scene);
-        primaryStage.setResizable(false);
+        primaryStage.setResizable(true);
+        primaryStage.setMaximized(false);
         primaryStage.centerOnScreen();
         primaryStage.show();
 

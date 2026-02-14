@@ -5,38 +5,44 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="esprit.farouk.controllers.ProfileController"
-      spacing="20.0" styleClass="content-area">
+<ScrollPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="esprit.farouk.controllers.ProfileController"
+            fitToWidth="true" style="-fx-background-color: #f5f7fa;">
+
+<VBox spacing="0" style="-fx-background-color: #f5f7fa;">
 
     <padding>
-        <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+        <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
     </padding>
 
-    <!-- Header -->
-    <HBox alignment="CENTER_LEFT" spacing="15.0">
-        <Label text="My Profile" styleClass="form-title">
+    <!-- Header Card -->
+    <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="card" style="-fx-padding: 20px 25px;">
+        <VBox.margin>
+            <Insets bottom="20.0"/>
+        </VBox.margin>
+
+        <Label text="👤 My Profile" styleClass="card-title">
             <font>
-                <Font name="System Bold" size="28.0"/>
+                <Font name="System Bold" size="24.0"/>
             </font>
         </Label>
         <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="statusBadge" text="Active" styleClass="success-label"
-               style="-fx-padding: 5 15; -fx-background-color: #e8f5e9; -fx-background-radius: 15;">
+        <Label fx:id="statusBadge" text="Active" styleClass="badge-success">
             <font>
                 <Font name="System Bold" size="13.0"/>
             </font>
         </Label>
     </HBox>
 
-    <Separator/>
-
     <!-- Profile Content -->
-    <HBox spacing="30.0" VBox.vgrow="ALWAYS">
+    <HBox spacing="20.0" VBox.vgrow="ALWAYS">
 
         <!-- Left Column - Profile Info -->
         <VBox spacing="20.0" prefWidth="450.0" styleClass="card">
-            <Label text="Profile Information" styleClass="card-title">
+            <padding>
+                <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+            </padding>
+            <Label text="📝 Profile Information" styleClass="card-title">
                 <font>
                     <Font name="System Bold" size="20.0"/>
                 </font>
@@ -101,7 +107,11 @@
 
         <!-- Right Column - Change Password -->
         <VBox spacing="20.0" prefWidth="450.0" styleClass="card">
-            <Label text="Change Password" styleClass="card-title">
+            <padding>
+                <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+            </padding>
+
+            <Label text="🔒 Change Password" styleClass="card-title">
                 <font>
                     <Font name="System Bold" size="20.0"/>
                 </font>
@@ -180,6 +190,72 @@
 
     </HBox>
 
+    <!-- Face Recognition Section (Admin Only) -->
+    <VBox fx:id="faceRecognitionSection" spacing="20.0" styleClass="card" visible="false" managed="false">
+        <VBox.margin>
+            <Insets top="20.0"/>
+        </VBox.margin>
+        <padding>
+            <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+        </padding>
+
+        <Label text="👤 Face Recognition" styleClass="card-title">
+            <font>
+                <Font name="System Bold" size="20.0"/>
+            </font>
+        </Label>
+
+        <Separator/>
+
+        <!-- Face Enrollment Status -->
+        <VBox spacing="10.0">
+            <Label fx:id="faceStatusLabel" text="Face recognition not enrolled" style="-fx-text-fill: #666;">
+                <font>
+                    <Font size="14.0"/>
+                </font>
+            </Label>
+            <Label text="Face recognition allows you to login securely without a password using facial authentication."
+                   wrapText="true" style="-fx-text-fill: #999; -fx-font-size: 13px;"/>
+        </VBox>
+
+        <!-- Face Error/Success Messages -->
+        <Label fx:id="faceErrorLabel" textFill="RED" wrapText="true" visible="false" styleClass="error-label"/>
+        <Label fx:id="faceSuccessLabel" textFill="GREEN" wrapText="true" visible="false" styleClass="success-label"/>
+
+        <!-- Face Action Buttons -->
+        <HBox spacing="15.0">
+            <Button fx:id="setupFaceButton" text="Setup Face Recognition" onAction="#handleSetupFace"
+                    prefHeight="45.0" styleClass="primary-button">
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Button>
+
+            <Button fx:id="removeFaceButton" text="Remove Face Data" onAction="#handleRemoveFace"
+                    prefHeight="45.0" styleClass="secondary-button" visible="false" managed="false">
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Button>
+        </HBox>
+
+        <!-- Info Box -->
+        <VBox spacing="10.0" style="-fx-background-color: #fff3cd; -fx-padding: 15; -fx-background-radius: 8;">
+            <Label text="Privacy and Security:" styleClass="field-label">
+                <font>
+                    <Font name="System Bold" size="13.0"/>
+                </font>
+            </Label>
+            <Label text="- Only mathematical embeddings are stored (not actual images)"
+                   style="-fx-text-fill: #856404; -fx-font-size: 12px;"/>
+            <Label text="- Embeddings cannot be reversed to recreate your face"
+                   style="-fx-text-fill: #856404; -fx-font-size: 12px;"/>
+            <Label text="- Password login remains available as a backup"
+                   style="-fx-text-fill: #856404; -fx-font-size: 12px;"/>
+        </VBox>
+
+    </VBox>
+
     <!-- Account Info Footer -->
     <HBox spacing="20.0" style="-fx-background-color: #f5f5f5; -fx-padding: 15; -fx-background-radius: 8;">
         <VBox spacing="5.0">
@@ -227,3 +303,5 @@
     </HBox>
 
 </VBox>
+
+</ScrollPane>

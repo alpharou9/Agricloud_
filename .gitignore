@@ -36,3 +36,12 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Face Recognition Models ###
+# Exclude large ONNX model files (download separately)
+models/*.onnx
+!models/README.md
+
+### OAuth Credentials ###
+# Keep actual credentials local only
+oauth-credentials.txt

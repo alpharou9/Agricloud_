@@ -235,7 +235,9 @@ public class ForgotPasswordController {
             Parent root = loader.load();
 
             Stage stage = (Stage) emailField.getScene().getWindow();
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
             stage.setTitle("AgriCloud - Login");
         } catch (Exception e) {
             showError("Failed to load login page");

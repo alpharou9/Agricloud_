@@ -22,12 +22,6 @@ public class DashboardController {
     private Label userNameLabel;
 
     @FXML
-    private Label userRoleLabel;
-
-    @FXML
-    private Label pageTitle;
-
-    @FXML
     private Label dateTimeLabel;
 
     @FXML
@@ -59,22 +53,27 @@ public class DashboardController {
 
     private UserService userService;
     private RoleService roleService;
+    private javafx.scene.Node dashboardContent;
 
     @FXML
     public void initialize() {
         userService = new UserService();
         roleService = new RoleService();
 
+        // Store the original dashboard content
+        if (!contentPane.getChildren().isEmpty()) {
+            dashboardContent = contentPane.getChildren().get(0);
+        }
+
         // Load current user info
         User currentUser = SessionManager.getCurrentUser();
         if (currentUser != null) {
-            userNameLabel.setText("Welcome, " + currentUser.getName());
-            userRoleLabel.setText("Role: " + currentUser.getRoleName());
-        }
+            userNameLabel.setText("Welcome, " + currentUser.getName().toLowerCase());
 
-        // Update date/time
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
-        dateTimeLabel.setText(LocalDateTime.now().format(formatter));
+            // Update date/time with role
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy");
+            dateTimeLabel.setText(LocalDateTime.now().format(formatter) + " | " + currentUser.getRoleName());
+        }
 
         // Load dashboard stats
         loadDashboardStats();
@@ -84,6 +83,26 @@ public class DashboardController {
             usersBtn.setVisible(false);
             rolesBtn.setVisible(false);
         }
+
+        // Add hover effects to sidebar buttons
+        addHoverEffect(dashboardBtn);
+        addHoverEffect(usersBtn);
+        addHoverEffect(rolesBtn);
+        addHoverEffect(profileBtn);
+    }
+
+    private void addHoverEffect(Button button) {
+        button.setOnMouseEntered(e -> {
+            if (!button.getStyle().contains("border-color")) { // Not the active button
+                button.setStyle("-fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 14px 20px; -fx-background-radius: 0; -fx-background-insets: 0;");
+            }
+        });
+
+        button.setOnMouseExited(e -> {
+            if (!button.getStyle().contains("border-color")) { // Not the active button
+                button.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 14px 20px; -fx-background-radius: 0; -fx-background-insets: 0;");
+            }
+        });
     }
 
     private void loadDashboardStats() {
@@ -110,29 +129,32 @@ public class DashboardController {
 
     @FXML
     private void showDashboard() {
-        pageTitle.setText("Dashboard");
         setActiveButton(dashboardBtn);
+
+        // Restore the original dashboard content
+        if (dashboardContent != null) {
+            contentPane.getChildren().clear();
+            contentPane.getChildren().add(dashboardContent);
+        }
+
         // Reload stats
         loadDashboardStats();
     }
 
     @FXML
     private void showUsers() {
-        pageTitle.setText("Users Management");
         setActiveButton(usersBtn);
         loadContentPane("/fxml/users.fxml");
     }
 
     @FXML
     private void showRoles() {
-        pageTitle.setText("Roles Management");
         setActiveButton(rolesBtn);
         loadContentPane("/fxml/roles.fxml");
     }
 
     @FXML
     private void showProfile() {
-        pageTitle.setText("My Profile");
         setActiveButton(profileBtn);
         loadContentPane("/fxml/profile.fxml");
     }
@@ -169,22 +191,31 @@ public class DashboardController {
     }
 
     private void setActiveButton(Button activeButton) {
-        // Remove active class from all buttons
-        dashboardBtn.getStyleClass().remove("sidebar-button-active");
-        usersBtn.getStyleClass().remove("sidebar-button-active");
-        rolesBtn.getStyleClass().remove("sidebar-button-active");
-        profileBtn.getStyleClass().remove("sidebar-button-active");
+        // Reset all buttons to inactive style
+        String inactiveStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 14px 20px; -fx-background-radius: 0; -fx-background-insets: 0;";
+        String activeStyle = "-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; -fx-alignment: center-left; -fx-padding: 14px 20px; -fx-border-width: 0 0 0 4px; -fx-border-color: #66bb6a; -fx-background-radius: 0; -fx-background-insets: 0;";
 
-        // Add active class to clicked button
-        if (!activeButton.getStyleClass().contains("sidebar-button-active")) {
-            activeButton.getStyleClass().add("sidebar-button-active");
-        }
+        dashboardBtn.setStyle(inactiveStyle);
+        usersBtn.setStyle(inactiveStyle);
+        rolesBtn.setStyle(inactiveStyle);
+        profileBtn.setStyle(inactiveStyle);
+
+        // Set active button style
+        activeButton.setStyle(activeStyle);
     }
 
     private void loadContentPane(String fxmlPath) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             javafx.scene.Node content = loader.load();
+
+            // Apply stylesheet to dynamically loaded content
+            if (content instanceof javafx.scene.Parent) {
+                javafx.scene.Parent parent = (javafx.scene.Parent) content;
+                parent.getStylesheets().clear();
+                parent.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            }
+
             contentPane.getChildren().clear();
             contentPane.getChildren().add(content);
         } catch (Exception e) {

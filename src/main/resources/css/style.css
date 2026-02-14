@@ -106,6 +106,60 @@
     -fx-background-color: #c8e6c9;
 }
 
+/* Google OAuth Button */
+.google-button {
+    -fx-background-color: white;
+    -fx-text-fill: #4285F4;
+    -fx-border-color: #4285F4;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 20px;
+    -fx-effect: dropshadow(gaussian, rgba(66, 133, 244, 0.2), 8, 0, 0, 2);
+}
+
+.google-button:hover {
+    -fx-background-color: #4285F4;
+    -fx-text-fill: white;
+    -fx-scale-y: 1.03;
+    -fx-scale-x: 1.03;
+    -fx-effect: dropshadow(gaussian, rgba(66, 133, 244, 0.4), 12, 0, 0, 3);
+}
+
+.google-button:pressed {
+    -fx-background-color: #3367D6;
+    -fx-text-fill: white;
+}
+
+/* Facebook OAuth Button */
+.facebook-button {
+    -fx-background-color: white;
+    -fx-text-fill: #1877F2;
+    -fx-border-color: #1877F2;
+    -fx-border-width: 2px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 20px;
+    -fx-effect: dropshadow(gaussian, rgba(24, 119, 242, 0.2), 8, 0, 0, 2);
+}
+
+.facebook-button:hover {
+    -fx-background-color: #1877F2;
+    -fx-text-fill: white;
+    -fx-scale-y: 1.03;
+    -fx-scale-x: 1.03;
+    -fx-effect: dropshadow(gaussian, rgba(24, 119, 242, 0.4), 12, 0, 0, 3);
+}
+
+.facebook-button:pressed {
+    -fx-background-color: #145DBF;
+    -fx-text-fill: white;
+}
+
 /* Hyperlinks */
 .hyperlink {
     -fx-text-fill: #4caf50;
@@ -161,20 +215,22 @@
     -fx-background-color: transparent;
     -fx-text-fill: white;
     -fx-alignment: center-left;
-    -fx-padding: 16px 20px;
+    -fx-padding: 14px 20px;
     -fx-cursor: hand;
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-font-weight: normal;
+    -fx-border-width: 0;
+    -fx-background-radius: 0;
 }
 
 .sidebar-button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.15);
-    -fx-scale-x: 1.02;
+    -fx-background-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-button-active {
-    -fx-background-color: #4caf50;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 8, 0, 0, 2);
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-border-width: 0 0 0 4px;
+    -fx-border-color: #4caf50;
 }
 
 /* Content Area */
@@ -443,5 +499,118 @@
     -fx-text-fill: white;
     -fx-background-radius: 6px;
     -fx-padding: 8px 12px;
+    -fx-font-size: 12px;
+}
+
+/* ===================================
+   FACE RECOGNITION STYLES
+   =================================== */
+
+/* Face Login Button */
+.face-login-button {
+    -fx-background-color: linear-gradient(to right, #6366f1, #8b5cf6);
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 24px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.3), 8, 0, 0, 2);
+}
+
+.face-login-button:hover {
+    -fx-background-color: linear-gradient(to right, #4f46e5, #7c3aed);
+    -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.4), 12, 0, 0, 3);
+}
+
+.face-login-button:pressed {
+    -fx-background-color: linear-gradient(to right, #4338ca, #6d28d9);
+    -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.2), 6, 0, 0, 1);
+}
+
+/* Camera Frame */
+.camera-frame {
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 3px;
+    -fx-border-radius: 12px;
+    -fx-background-color: #000000;
+    -fx-background-radius: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 12, 0, 0, 4);
+}
+
+/* Instruction Label */
+.instruction-label {
+    -fx-text-fill: #1e293b;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+}
+
+/* Status Label */
+.status-label {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 14px;
+    -fx-text-alignment: center;
+}
+
+/* Enrollment Dialog */
+.enrollment-dialog {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16px;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.12), 24, 0, 0, 8);
+}
+
+/* Login Container */
+.login-container {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16px;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 16, 0, 0, 4);
+}
+
+/* Title Styles */
+.title {
+    -fx-text-fill: #1e293b;
+    -fx-font-weight: bold;
+}
+
+.subtitle {
+    -fx-text-fill: #64748b;
+}
+
+/* Success Button */
+.success-button {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 24px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.25), 6, 0, 0, 2);
+}
+
+.success-button:hover {
+    -fx-background-color: #15803d;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.35), 10, 0, 0, 3);
+}
+
+.success-button:pressed {
+    -fx-background-color: #166534;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.15), 4, 0, 0, 1);
+}
+
+.success-button:disabled {
+    -fx-background-color: #a7f3d0;
+    -fx-opacity: 0.6;
+}
+
+/* Help Text */
+.help-text {
+    -fx-text-fill: #9ca3af;
     -fx-font-size: 12px;
 }

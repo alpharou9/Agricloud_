@@ -81,6 +81,29 @@
             <Hyperlink fx:id="forgotPasswordLink" text="Forgot Password?" onAction="#handleForgotPassword"
                        styleClass="hyperlink"/>
 
+            <!-- OAuth Login -->
+            <Separator prefWidth="320.0">
+                <VBox.margin>
+                    <Insets top="10.0" bottom="10.0"/>
+                </VBox.margin>
+            </Separator>
+
+            <Label text="Or sign in with:" styleClass="link-label"/>
+
+            <Button fx:id="googleButton" text="🔐 Sign in with Google" onAction="#handleGoogleLogin" prefWidth="320.0"
+                    prefHeight="40.0" styleClass="google-button">
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Button>
+
+            <Button fx:id="faceLoginButton" text="👤 Login with Face Recognition" onAction="#handleFaceLogin" prefWidth="320.0"
+                    prefHeight="40.0" styleClass="face-login-button">
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Button>
+
             <!-- Guest Login -->
             <Separator prefWidth="320.0">
                 <VBox.margin>

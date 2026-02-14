@@ -5,7 +5,13 @@ import esprit.farouk.services.UserService;
 import esprit.farouk.utils.SessionManager;
 import esprit.farouk.utils.ValidationUtils;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.format.DateTimeFormatter;
@@ -66,6 +72,24 @@ public class ProfileController {
     @FXML
     private Label userIdLabel;
 
+    @FXML
+    private VBox faceRecognitionSection;
+
+    @FXML
+    private Label faceStatusLabel;
+
+    @FXML
+    private Label faceErrorLabel;
+
+    @FXML
+    private Label faceSuccessLabel;
+
+    @FXML
+    private Button setupFaceButton;
+
+    @FXML
+    private Button removeFaceButton;
+
     private UserService userService;
     private User currentUser;
 
@@ -76,6 +100,7 @@ public class ProfileController {
 
         if (currentUser != null) {
             loadUserData();
+            initializeFaceRecognition();
         }
 
         // Add password strength indicator
@@ -283,5 +308,103 @@ public class ProfileController {
         passwordSuccessLabel.setText(message);
         passwordSuccessLabel.setVisible(true);
         passwordErrorLabel.setVisible(false);
+    }
+
+    // ========== Face Recognition Methods ==========
+
+    /**
+     * Initializes face recognition section (Admin only)
+     */
+    private void initializeFaceRecognition() {
+        // Only show for Admin users
+        if ("Admin".equalsIgnoreCase(currentUser.getRoleName())) {
+            faceRecognitionSection.setVisible(true);
+            faceRecognitionSection.setManaged(true);
+            updateFaceStatus();
+        }
+    }
+
+    /**
+     * Updates face recognition status display
+     */
+    private void updateFaceStatus() {
+        boolean hasFace = userService.hasFaceEnrollment(currentUser.getId());
+
+        if (hasFace) {
+            faceStatusLabel.setText("✓ Face recognition enabled");
+            faceStatusLabel.setStyle("-fx-text-fill: #16a34a; -fx-font-weight: bold;");
+            setupFaceButton.setVisible(false);
+            setupFaceButton.setManaged(false);
+            removeFaceButton.setVisible(true);
+            removeFaceButton.setManaged(true);
+        } else {
+            faceStatusLabel.setText("Face recognition not enrolled");
+            faceStatusLabel.setStyle("-fx-text-fill: #666;");
+            setupFaceButton.setVisible(true);
+            setupFaceButton.setManaged(true);
+            removeFaceButton.setVisible(false);
+            removeFaceButton.setManaged(false);
+        }
+    }
+
+    /**
+     * Opens face enrollment dialog
+     */
+    @FXML
+    private void handleSetupFace() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/face_enrollment.fxml"));
+            Parent root = loader.load();
+
+            FaceEnrollmentController controller = loader.getController();
+            controller.initialize(currentUser.getId());
+
+            Stage stage = new Stage();
+            stage.setTitle("Face Recognition Enrollment");
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.getScene().getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+
+            stage.setOnHidden(e -> updateFaceStatus());
+            stage.showAndWait();
+
+        } catch (Exception e) {
+            showFaceError("Failed to open enrollment dialog: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Removes face enrollment data
+     */
+    @FXML
+    private void handleRemoveFace() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Remove Face Data");
+        alert.setHeaderText("Are you sure you want to remove your face data?");
+        alert.setContentText("You will need to re-enroll to use face login again.");
+
+        if (alert.showAndWait().get() == ButtonType.OK) {
+            boolean success = userService.removeFaceEnrollment(currentUser.getId());
+
+            if (success) {
+                showFaceSuccess("Face data removed successfully");
+                updateFaceStatus();
+            } else {
+                showFaceError("Failed to remove face data");
+            }
+        }
+    }
+
+    private void showFaceError(String message) {
+        faceErrorLabel.setText(message);
+        faceErrorLabel.setVisible(true);
+        faceSuccessLabel.setVisible(false);
+    }
+
+    private void showFaceSuccess(String message) {
+        faceSuccessLabel.setText(message);
+        faceSuccessLabel.setVisible(true);
+        faceErrorLabel.setVisible(false);
     }
 }
