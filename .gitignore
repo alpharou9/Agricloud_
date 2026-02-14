@@ -45,3 +45,8 @@ models/*.onnx
 ### OAuth Credentials ###
 # Keep actual credentials local only
 oauth-credentials.txt
+
+### Documentation Files ###
+# Exclude all markdown files except models/README.md
+*.md
+!models/README.md
