@@ -2,6 +2,7 @@ package org.example.controller;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -48,90 +49,49 @@ public class ProductController {
 
     private final ProductDAO productDAO = new ProductDAO();
 
-    // Search, filter, sort
-    private final TextField searchField = new TextField();
-    private final ComboBox<String> filterCategoryCombo = new ComboBox<>();
-    private final ComboBox<String> filterStatusCombo = new ComboBox<>();
-    private final ComboBox<String> sortCombo = new ComboBox<>();
+    @FXML private StackPane rootStack;
+    @FXML private TextField searchField;
+    @FXML private ComboBox<String> filterCategoryCombo;
+    @FXML private ComboBox<String> filterStatusCombo;
+    @FXML private ComboBox<String> sortCombo;
+    @FXML private FlowPane productGrid;
 
-    // Card grid
-    private FlowPane productGrid;
-    private ScrollPane scrollPane;
     private ObservableList<Product> allProducts = FXCollections.observableArrayList();
-
-    // Drawer
-    private StackPane rootStack;
     private HBox drawerOverlay;
 
-    public StackPane getView() {
-        rootStack = new StackPane();
-
+    @FXML
+    public void initialize() {
         try {
             Files.createDirectories(Path.of(UPLOADS_DIR));
         } catch (IOException e) {
             System.out.println("[ProductController] Could not create uploads dir: " + e.getMessage());
         }
 
-        // ===== MAIN CONTENT =====
-        VBox mainContent = new VBox();
-        mainContent.setStyle("-fx-background-color: transparent;");
-
-        HBox topBar = new HBox(10);
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(0, 0, 8, 0));
-
-        searchField.setPromptText("Search products...");
-        searchField.getStyleClass().add("search-field");
-        searchField.setPrefWidth(180);
-        HBox.setHgrow(searchField, Priority.ALWAYS);
-
+        // Populate combos
         filterCategoryCombo.setItems(FXCollections.observableArrayList(
                 "All Categories", "Fruits", "Vegetables", "Grains", "Dairy", "Livestock", "Other"));
         filterCategoryCombo.setValue("All Categories");
-        filterCategoryCombo.getStyleClass().add("filter-combo");
 
         filterStatusCombo.setItems(FXCollections.observableArrayList(
                 "All Status", "pending", "approved", "rejected", "sold_out"));
         filterStatusCombo.setValue("All Status");
-        filterStatusCombo.getStyleClass().add("filter-combo");
 
         sortCombo.setItems(FXCollections.observableArrayList(
                 "Name A-Z", "Name Z-A", "Price: Low-High", "Price: High-Low", "Low Stock First", "Newest"));
         sortCombo.setValue("Name A-Z");
-        sortCombo.getStyleClass().add("filter-combo");
 
-        Button addBtn = new Button("+ Add Product");
-        addBtn.getStyleClass().add("btn-primary");
-        addBtn.setOnAction(e -> openDrawer(null));
-
-        topBar.getChildren().addAll(searchField, filterCategoryCombo, filterStatusCombo, sortCombo, addBtn);
-
-        productGrid = new FlowPane();
-        productGrid.getStyleClass().add("product-grid");
-        productGrid.setPrefWrapLength(600);
-
+        // Listeners
         searchField.textProperty().addListener((obs, o, n) -> refreshGrid());
         filterCategoryCombo.valueProperty().addListener((obs, o, n) -> refreshGrid());
         filterStatusCombo.valueProperty().addListener((obs, o, n) -> refreshGrid());
         sortCombo.valueProperty().addListener((obs, o, n) -> refreshGrid());
 
-        VBox scrollContent = new VBox(16);
-        scrollContent.setPadding(new Insets(4));
-        scrollContent.getChildren().addAll(topBar, productGrid);
-
-        scrollPane = new ScrollPane(scrollContent);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.getStyleClass().add("products-scroll");
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
-
-        mainContent.getChildren().add(scrollPane);
-        VBox.setVgrow(mainContent, Priority.ALWAYS);
-
-        rootStack.getChildren().add(mainContent);
-
         refreshGrid();
-        return rootStack;
+    }
+
+    @FXML
+    private void onAddProduct() {
+        openDrawer(null);
     }
 
     // ==================== DRAWER ====================
@@ -262,10 +222,8 @@ public class ProductController {
         VBox body = new VBox(10);
         body.getStyleClass().add("drawer-body");
 
-        // Name (full width)
         VBox nameCol = fieldCol("Name *", nameField, nameError);
 
-        // Category + Unit row
         HBox catUnitRow = new HBox(10);
         catUnitRow.getStyleClass().add("drawer-field-row");
         VBox catCol = fieldCol("Category *", categoryCombo, null);
@@ -274,7 +232,6 @@ public class ProductController {
         HBox.setHgrow(unitCol, Priority.ALWAYS);
         catUnitRow.getChildren().addAll(catCol, unitCol);
 
-        // Price + Quantity row
         HBox priceQtyRow = new HBox(10);
         priceQtyRow.getStyleClass().add("drawer-field-row");
         VBox priceCol = fieldCol("Price *", priceField, priceError);
@@ -283,13 +240,9 @@ public class ProductController {
         HBox.setHgrow(qtyCol, Priority.ALWAYS);
         priceQtyRow.getChildren().addAll(priceCol, qtyCol);
 
-        // Status (half width)
         VBox statusCol = fieldCol("Status", statusCombo, null);
-
-        // Description
         VBox descCol = fieldCol("Description", descriptionArea, null);
 
-        // Image section
         Label imgSectionLbl = new Label("PHOTO");
         imgSectionLbl.getStyleClass().add("drawer-section-label");
 
@@ -304,7 +257,6 @@ public class ProductController {
 
         body.getChildren().addAll(nameCol, catUnitRow, priceQtyRow, statusCol, descCol, imgSectionLbl, imageRow);
 
-        // Wrap body in scroll
         ScrollPane bodyScroll = new ScrollPane(body);
         bodyScroll.setFitToWidth(true);
         bodyScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -398,13 +350,11 @@ public class ProductController {
         drawerPanel.getStyleClass().add("drawer-panel");
         drawerPanel.getChildren().addAll(header, bodyScroll, actions);
 
-        // --- Backdrop ---
         Region backdrop = new Region();
         backdrop.getStyleClass().add("drawer-backdrop");
         backdrop.setOnMouseClicked(e -> closeDrawer());
         HBox.setHgrow(backdrop, Priority.ALWAYS);
 
-        // --- Overlay ---
         drawerOverlay = new HBox();
         drawerOverlay.getChildren().addAll(backdrop, drawerPanel);
 
@@ -474,8 +424,8 @@ public class ProductController {
 
         info.getChildren().addAll(nameLabel, priceLabel, categoryLabel, qtyLabel);
 
-        HBox actions = new HBox(4);
-        actions.getStyleClass().add("card-actions");
+        HBox cardActions = new HBox(4);
+        cardActions.getStyleClass().add("card-actions");
 
         Button editBtn = new Button("Edit");
         editBtn.getStyleClass().add("btn-icon");
@@ -495,8 +445,8 @@ public class ProductController {
             });
         });
 
-        actions.getChildren().addAll(editBtn, deleteBtn);
-        card.getChildren().addAll(imageArea, info, actions);
+        cardActions.getChildren().addAll(editBtn, deleteBtn);
+        card.getChildren().addAll(imageArea, info, cardActions);
 
         card.setOnMouseClicked(e -> {
             if (e.getTarget() instanceof Button) return;

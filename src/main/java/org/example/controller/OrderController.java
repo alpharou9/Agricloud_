@@ -2,7 +2,7 @@ package org.example.controller;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
+import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -31,54 +31,21 @@ public class OrderController {
     private final OrderDAO orderDAO = new OrderDAO();
     private final ProductDAO productDAO = new ProductDAO();
 
-    private VBox orderListBox;
-    private ObservableList<Product> productList = FXCollections.observableArrayList();
+    @FXML private StackPane rootStack;
+    @FXML private VBox orderListBox;
 
-    // Drawer
-    private StackPane rootStack;
+    private ObservableList<Product> productList = FXCollections.observableArrayList();
     private HBox drawerOverlay;
 
-    public StackPane getView() {
-        rootStack = new StackPane();
-
-        VBox mainContent = new VBox();
-        mainContent.setStyle("-fx-background-color: transparent;");
-
-        HBox topBar = new HBox(12);
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(0, 0, 8, 0));
-
-        Label title = new Label("Order List");
-        title.getStyleClass().add("card-title");
-        title.setStyle("-fx-padding: 0;");
-        HBox.setHgrow(title, Priority.ALWAYS);
-
-        Button addBtn = new Button("+ New Order");
-        addBtn.getStyleClass().add("btn-primary");
-        addBtn.setOnAction(e -> openDrawer(null));
-
-        topBar.getChildren().addAll(title, addBtn);
-
-        orderListBox = new VBox(8);
-
-        VBox scrollContent = new VBox(16);
-        scrollContent.setPadding(new Insets(4));
-        scrollContent.getChildren().addAll(topBar, orderListBox);
-
-        ScrollPane scrollPane = new ScrollPane(scrollContent);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.getStyleClass().add("products-scroll");
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
-
-        mainContent.getChildren().add(scrollPane);
-        VBox.setVgrow(mainContent, Priority.ALWAYS);
-
-        rootStack.getChildren().add(mainContent);
-
+    @FXML
+    public void initialize() {
         refreshProducts();
         refreshOrders();
-        return rootStack;
+    }
+
+    @FXML
+    private void onAddOrder() {
+        openDrawer(null);
     }
 
     // ==================== DRAWER ====================
@@ -86,7 +53,6 @@ public class OrderController {
     private void openDrawer(Order existing) {
         closeDrawer();
 
-        // Form fields
         ComboBox<Product> productCombo = new ComboBox<>();
         productCombo.setItems(productList);
         productCombo.setMaxWidth(Double.MAX_VALUE);
@@ -180,7 +146,6 @@ public class OrderController {
         VBox prodCol = fieldCol("Product *", productCombo);
         VBox qtyCol = fieldCol("Quantity *", quantityField);
 
-        // Price display row
         VBox priceSection = new VBox(4);
         Label priceSectLbl = new Label("PRICING");
         priceSectLbl.getStyleClass().add("drawer-section-label");
@@ -191,7 +156,6 @@ public class OrderController {
         priceRow.getChildren().addAll(upCol, tpCol);
         priceSection.getChildren().addAll(priceSectLbl, priceRow, stockWarning);
 
-        // Status + delivery row
         HBox statusDelRow = new HBox(10);
         statusDelRow.getStyleClass().add("drawer-field-row");
         VBox statCol = fieldCol("Status", statusCombo);
@@ -200,7 +164,6 @@ public class OrderController {
         HBox.setHgrow(delCol, Priority.ALWAYS);
         statusDelRow.getChildren().addAll(statCol, delCol);
 
-        // Shipping section
         Label shipLbl = new Label("SHIPPING");
         shipLbl.getStyleClass().add("drawer-section-label");
         VBox addrCol = fieldCol("Address *", addressField);
