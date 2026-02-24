@@ -62,6 +62,32 @@
             <artifactId>atlantafx-base</artifactId>
             <version>2.0.1</version>
         </dependency>
+
+        <!-- JavaCV (OpenCV wrapper) with all platform binaries -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv-platform</artifactId>
+            <version>1.5.10</version>
+        </dependency>
+
+        <!-- GSON for JSON serialization of face embeddings -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+
+        <!-- ZXing for QR code generation -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.2</version>
+        </dependency>
     </dependencies>
 
     <build>

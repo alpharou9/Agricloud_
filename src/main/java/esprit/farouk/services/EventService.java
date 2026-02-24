@@ -121,7 +121,7 @@ public class EventService {
         String sql = "SELECT e.*, u.name as user_name, " +
                      "(SELECT COUNT(*) FROM participations p WHERE p.event_id = e.id AND p.status != 'cancelled') as participant_count " +
                      "FROM events e LEFT JOIN users u ON e.user_id = u.id " +
-                     "WHERE e.status = 'upcoming' AND e.event_date > NOW() ORDER BY e.event_date ASC";
+                     "WHERE e.status IN ('upcoming', 'ongoing') ORDER BY e.event_date ASC";
         Statement st = connection.createStatement();
         ResultSet rs = st.executeQuery(sql);
         while (rs.next()) {

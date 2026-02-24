@@ -130,6 +130,25 @@ public class LoginController {
         }
     }
 
+    @FXML
+    private void handleFaceLogin() {
+        try {
+            hideError();
+
+            // Navigate to face login screen
+            Parent root = FXMLLoader.load(getClass().getResource("/fxml/face_login.fxml"));
+            Stage stage = (Stage) emailField.getScene().getWindow();
+            Scene scene = new Scene(root, 800, 650);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
+            stage.setTitle("AgriCloud - Face Recognition Login");
+
+        } catch (Exception e) {
+            showError("Failed to load face login screen: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void showError(String message) {
         errorLabel.setText(message);
         errorLabel.setVisible(true);

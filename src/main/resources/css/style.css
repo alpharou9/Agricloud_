@@ -617,3 +617,150 @@
     -fx-padding: 6 12;
     -fx-font-size: 12;
 }
+
+/* ============================================================
+   FACE RECOGNITION
+   ============================================================ */
+
+/* Camera Frame */
+.camera-frame {
+    -fx-border-color: -color-brand;
+    -fx-border-width: 3;
+    -fx-border-radius: 12;
+    -fx-background-color: black;
+    -fx-background-radius: 12;
+    -fx-padding: 5;
+}
+
+/* Face Login Button */
+.face-login-button {
+    -fx-background-color: #2563eb;
+    -fx-text-fill: white;
+    -fx-font-size: 15;
+    -fx-font-weight: bold;
+    -fx-padding: 12 24;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.25), 6, 0, 0, 2);
+}
+
+.face-login-button:hover {
+    -fx-background-color: #1d4ed8;
+    -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.35), 10, 0, 0, 3);
+}
+
+.face-login-button:pressed {
+    -fx-background-color: #1e40af;
+    -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.15), 4, 0, 0, 1);
+}
+
+/* Instruction Label */
+.instruction-label {
+    -fx-font-size: 16;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-brand;
+}
+
+/* Status Label */
+.status-label {
+    -fx-font-size: 14;
+    -fx-text-fill: -color-text-muted;
+}
+
+/* Enrollment Dialog */
+.enrollment-dialog {
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.12), 32, 0, 0, 8);
+}
+
+/* Primary Button (generic) */
+.primary-button {
+    -fx-background-color: -color-brand;
+    -fx-text-fill: white;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.2), 4, 0, 0, 1);
+}
+
+.primary-button:hover {
+    -fx-background-color: -color-brand-hover;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.3), 6, 0, 0, 2);
+}
+
+.primary-button:pressed {
+    -fx-background-color: #166534;
+}
+
+/* Secondary Button (generic) */
+.secondary-button {
+    -fx-background-color: -color-surface-alt;
+    -fx-text-fill: -color-text-muted;
+    -fx-font-size: 14;
+    -fx-font-weight: normal;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+    -fx-border-color: -color-border;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-cursor: hand;
+}
+
+.secondary-button:hover {
+    -fx-background-color: -color-border;
+    -fx-text-fill: -color-text;
+}
+
+.secondary-button:pressed {
+    -fx-background-color: #cbd5e1;
+}
+
+/* Success Button */
+.success-button {
+    -fx-background-color: -color-brand;
+    -fx-text-fill: white;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.2), 4, 0, 0, 1);
+}
+
+.success-button:hover {
+    -fx-background-color: -color-brand-hover;
+    -fx-effect: dropshadow(gaussian, rgba(22, 163, 74, 0.3), 6, 0, 0, 2);
+}
+
+/* Help Text */
+.help-text {
+    -fx-font-size: 12;
+    -fx-text-fill: -color-text-muted;
+    -fx-font-style: italic;
+}
+
+/* Login Container */
+.login-container {
+    -fx-background-color: linear-gradient(to bottom right, #f0fdf4, #dcfce7, #ecfdf5);
+}
+
+/* Title */
+.title {
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-brand;
+}
+
+/* Subtitle */
+.subtitle {
+    -fx-font-size: 13;
+    -fx-text-fill: -color-text-muted;
+}
+
+/* Color Success (for checkmark) */
+-color-success: #16a34a;

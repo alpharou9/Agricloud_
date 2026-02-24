@@ -22,7 +22,10 @@ import esprit.farouk.services.PostService;
 import esprit.farouk.services.ProductService;
 import esprit.farouk.services.RoleService;
 import esprit.farouk.services.UserService;
+import esprit.farouk.utils.EmailUtils;
+import esprit.farouk.utils.TranslationUtils;
 import esprit.farouk.utils.ValidationUtils;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -47,6 +50,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -169,7 +173,12 @@ public class DashboardController {
             statsBtn.setMaxWidth(Double.MAX_VALUE);
             statsBtn.setOnAction(e -> { setActiveSidebarButton(statsBtn); showStatisticsView(); });
 
-            sidebarMenu.getChildren().addAll(homeBtn, usersBtn, rolesBtn, farmsBtn, productsBtn, ordersBtn, postsBtn, blogBtn, eventsBtn, statsBtn);
+            Button profileBtn = new Button("Profile");
+            profileBtn.getStyleClass().add("sidebar-button");
+            profileBtn.setMaxWidth(Double.MAX_VALUE);
+            profileBtn.setOnAction(e -> { setActiveSidebarButton(profileBtn); showProfileView(); });
+
+            sidebarMenu.getChildren().addAll(homeBtn, usersBtn, rolesBtn, farmsBtn, productsBtn, ordersBtn, postsBtn, blogBtn, eventsBtn, statsBtn, profileBtn);
             setActiveSidebarButton(homeBtn);
             showHomeView();
         } else if ("farmer".equalsIgnoreCase(roleName)) {
@@ -964,8 +973,117 @@ public class DashboardController {
 
         form.add(saveBtn, 1, row);
 
-        container.getChildren().addAll(title, picBox, form, feedbackLabel);
+        // Face Recognition section (All roles except Guest)
+        VBox faceRecognitionBox = null;
+        try {
+            Role role = roleService.getById(currentUser.getRoleId());
+            if (role != null && !"guest".equalsIgnoreCase(role.getName())) {
+                faceRecognitionBox = createFaceRecognitionSection();
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        if (faceRecognitionBox != null) {
+            container.getChildren().addAll(title, picBox, form, feedbackLabel, faceRecognitionBox);
+        } else {
+            container.getChildren().addAll(title, picBox, form, feedbackLabel);
+        }
         contentArea.getChildren().add(container);
+    }
+
+    private VBox createFaceRecognitionSection() {
+        VBox section = new VBox(15);
+        section.setPadding(new Insets(20));
+        section.setMaxWidth(450);
+        section.setStyle("-fx-background-color: -color-surface; -fx-background-radius: 12; " +
+                         "-fx-border-color: -color-border; -fx-border-radius: 12; -fx-border-width: 1;");
+
+        Label sectionTitle = new Label("Face Recognition");
+        sectionTitle.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: -color-brand;");
+
+        HBox statusRow = new HBox(10);
+        statusRow.setAlignment(Pos.CENTER_LEFT);
+
+        Label statusLabel = new Label();
+        Button actionButton = new Button();
+
+        try {
+            boolean hasEnrollment = userService.hasFaceEnrollment(currentUser.getId());
+
+            if (hasEnrollment) {
+                statusLabel.setText("✓ Face recognition enabled");
+                statusLabel.setStyle("-fx-text-fill: -color-success; -fx-font-weight: bold;");
+
+                actionButton.setText("Remove Face Data");
+                actionButton.getStyleClass().add("profile-pic-delete-button");
+                actionButton.setOnAction(e -> {
+                    Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Are you sure you want to remove your face recognition data?");
+                    confirm.setHeaderText("Remove Face Data");
+                    if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                        try {
+                            userService.removeFaceEnrollment(currentUser.getId());
+                            Alert success = new Alert(Alert.AlertType.INFORMATION,
+                                    "Face recognition data removed successfully.");
+                            success.showAndWait();
+                            showProfileView(); // Refresh view
+                        } catch (SQLException ex) {
+                            Alert error = new Alert(Alert.AlertType.ERROR,
+                                    "Failed to remove face data: " + ex.getMessage());
+                            error.showAndWait();
+                        }
+                    }
+                });
+            } else {
+                statusLabel.setText("Face recognition not enabled");
+                statusLabel.setStyle("-fx-text-fill: -color-text-muted;");
+
+                actionButton.setText("Setup Face Recognition");
+                actionButton.getStyleClass().add("profile-pic-button");
+                actionButton.setOnAction(e -> showFaceEnrollmentDialog());
+            }
+
+        } catch (SQLException ex) {
+            statusLabel.setText("Error checking face enrollment status");
+            statusLabel.setStyle("-fx-text-fill: -color-danger;");
+            actionButton.setDisable(true);
+        }
+
+        statusRow.getChildren().addAll(statusLabel, actionButton);
+
+        Label description = new Label(
+                "Face recognition allows you to login quickly and securely by scanning your face.");
+        description.setWrapText(true);
+        description.setStyle("-fx-text-fill: -color-text-muted; -fx-font-size: 12;");
+
+        section.getChildren().addAll(sectionTitle, statusRow, description);
+        return section;
+    }
+
+    private void showFaceEnrollmentDialog() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/face_enrollment.fxml"));
+            VBox dialogContent = loader.load();
+
+            FaceEnrollmentController controller = loader.getController();
+            controller.setCurrentUser(currentUser);
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Face Enrollment");
+            dialog.setScene(new Scene(dialogContent));
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.initOwner(contentArea.getScene().getWindow());
+
+            dialog.setOnHidden(e -> showProfileView()); // Refresh profile view when dialog closes
+
+            dialog.showAndWait();
+
+        } catch (IOException ex) {
+            Alert error = new Alert(Alert.AlertType.ERROR,
+                    "Failed to open face enrollment dialog: " + ex.getMessage());
+            error.showAndWait();
+        }
     }
 
     private String saveProfilePicture(String sourcePath, long userId) throws IOException {
@@ -3508,7 +3626,59 @@ public class DashboardController {
         scrollPane.setFitToWidth(true);
         VBox.setVgrow(scrollPane, Priority.ALWAYS);
 
-        container.getChildren().addAll(backBtn, scrollPane);
+        // Translate button
+        ComboBox<String> langBox = new ComboBox<>();
+        langBox.getItems().addAll("French", "Arabic", "Spanish", "German");
+        langBox.setValue("French");
+
+        Button translateBtn = new Button("Translate");
+        translateBtn.getStyleClass().add("action-button-edit");
+        translateBtn.setOnAction(ev -> {
+            String selectedLang = langBox.getValue();
+            String langPair = switch (selectedLang) {
+                case "Arabic"  -> "en|ar";
+                case "Spanish" -> "en|es";
+                case "German"  -> "en|de";
+                default        -> "en|fr";
+            };
+            translateBtn.setDisable(true);
+            translateBtn.setText("Translating...");
+            String origTitle   = post.getTitle();
+            String origContent = post.getContent();
+            new Thread(() -> {
+                try {
+                    String tTitle   = TranslationUtils.translate(origTitle, langPair);
+                    String tContent = TranslationUtils.translate(origContent, langPair);
+                    Platform.runLater(() -> {
+                        translateBtn.setDisable(false);
+                        translateBtn.setText("Translate");
+                        Alert dialog = new Alert(Alert.AlertType.INFORMATION);
+                        dialog.setTitle("Translation — " + selectedLang);
+                        dialog.setHeaderText(tTitle);
+                        TextArea ta = new TextArea(tContent);
+                        ta.setWrapText(true);
+                        ta.setEditable(false);
+                        ta.setPrefSize(520, 300);
+                        dialog.getDialogPane().setContent(ta);
+                        dialog.showAndWait();
+                    });
+                } catch (Exception ex) {
+                    Platform.runLater(() -> {
+                        translateBtn.setDisable(false);
+                        translateBtn.setText("Translate");
+                        showAlert(Alert.AlertType.ERROR, "Translation Failed",
+                                "Could not translate the post:\n" + ex.getMessage());
+                    });
+                }
+            }).start();
+        });
+
+        Region topSpacer = new Region();
+        HBox.setHgrow(topSpacer, Priority.ALWAYS);
+        HBox topBar = new HBox(10, backBtn, topSpacer, langBox, translateBtn);
+        topBar.setAlignment(Pos.CENTER_LEFT);
+
+        container.getChildren().addAll(topBar, scrollPane);
         contentArea.getChildren().add(container);
     }
 
@@ -4090,7 +4260,18 @@ public class DashboardController {
                     p.setStatus("confirmed");
                     participationService.add(p);
                 }
-                showAlert(Alert.AlertType.INFORMATION, "Registered", "You have successfully registered for this event!");
+                // Send ticket email with QR code in background thread
+                Participation registered = participationService.getByEventAndUser(event.getId(), currentUser.getId());
+                final long participationId = registered != null ? registered.getId() : 0;
+                final Event eventSnapshot = event;
+                new Thread(() -> {
+                    try {
+                        EmailUtils.sendEventTicket(currentUser.getEmail(), currentUser.getName(), eventSnapshot, participationId);
+                    } catch (Exception ex) {
+                        System.err.println("Failed to send ticket email: " + ex.getMessage());
+                    }
+                }).start();
+                showAlert(Alert.AlertType.INFORMATION, "Registered!", "You have successfully registered for this event!\nA ticket with QR code has been sent to " + currentUser.getEmail());
                 showEventDetailView(eventService.getById(event.getId())); // Refresh
             } catch (SQLException ex) {
                 showAlert(Alert.AlertType.ERROR, "Error", "Failed to register: " + ex.getMessage());

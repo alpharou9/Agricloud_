@@ -49,3 +49,9 @@ uploads/
 
 ### Maven Shade Plugin ###
 dependency-reduced-pom.xml
+
+### Face Recognition Models ###
+models/*.onnx
+
+### Markdown docs ###
+*.md

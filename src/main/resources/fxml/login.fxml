@@ -57,5 +57,15 @@
 
         <!-- Guest login button -->
         <Button text="Continue as Guest" onAction="#handleGuestLogin" styleClass="guest-button" maxWidth="Infinity"/>
+
+        <!-- Separator -->
+        <Label text="- OR -" styleClass="app-subtitle"/>
+
+        <!-- Face Recognition Login Button -->
+        <Button text="Login with Face Recognition" onAction="#handleFaceLogin" styleClass="face-login-button" maxWidth="Infinity">
+            <graphic>
+                <Label text="👤" style="-fx-font-size: 18;"/>
+            </graphic>
+        </Button>
     </VBox>
 </HBox>

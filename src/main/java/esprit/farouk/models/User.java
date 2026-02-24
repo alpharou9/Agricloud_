@@ -12,6 +12,8 @@ public class User {
     private String profilePicture;
     private String status; // active, inactive, blocked
     private LocalDateTime emailVerifiedAt;
+    private String faceEmbeddings; // JSON array of face embeddings
+    private LocalDateTime faceEnrolledAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -28,7 +30,8 @@ public class User {
 
     public User(long id, long roleId, String name, String email, String password,
                 String phone, String profilePicture, String status,
-                LocalDateTime emailVerifiedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                LocalDateTime emailVerifiedAt, String faceEmbeddings, LocalDateTime faceEnrolledAt,
+                LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.roleId = roleId;
         this.name = name;
@@ -38,6 +41,8 @@ public class User {
         this.profilePicture = profilePicture;
         this.status = status;
         this.emailVerifiedAt = emailVerifiedAt;
+        this.faceEmbeddings = faceEmbeddings;
+        this.faceEnrolledAt = faceEnrolledAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -68,6 +73,12 @@ public class User {
 
     public LocalDateTime getEmailVerifiedAt() { return emailVerifiedAt; }
     public void setEmailVerifiedAt(LocalDateTime emailVerifiedAt) { this.emailVerifiedAt = emailVerifiedAt; }
+
+    public String getFaceEmbeddings() { return faceEmbeddings; }
+    public void setFaceEmbeddings(String faceEmbeddings) { this.faceEmbeddings = faceEmbeddings; }
+
+    public LocalDateTime getFaceEnrolledAt() { return faceEnrolledAt; }
+    public void setFaceEnrolledAt(LocalDateTime faceEnrolledAt) { this.faceEnrolledAt = faceEnrolledAt; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

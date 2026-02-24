@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="esprit.farouk.controllers.FaceEnrollmentController"
+      spacing="20"
+      alignment="CENTER"
+      styleClass="enrollment-dialog"
+      prefWidth="600"
+      prefHeight="550">
+
+    <padding>
+        <Insets top="20" right="30" bottom="20" left="30"/>
+    </padding>
+
+    <!-- Title -->
+    <Label text="Face Enrollment" styleClass="title"/>
+    <Label text="Capture your face from different angles for better recognition"
+           styleClass="subtitle"
+           wrapText="true"/>
+
+    <!-- Camera Preview -->
+    <VBox alignment="CENTER" spacing="10">
+        <ImageView fx:id="cameraPreview"
+                   fitWidth="480"
+                   fitHeight="360"
+                   preserveRatio="true"
+                   styleClass="camera-frame"/>
+
+        <!-- Instruction Label -->
+        <Label fx:id="instructionLabel"
+               text="Look straight at the camera"
+               styleClass="instruction-label"
+               wrapText="true"/>
+    </VBox>
+
+    <!-- Progress Section -->
+    <VBox spacing="10" alignment="CENTER">
+        <HBox spacing="10" alignment="CENTER">
+            <Label text="Progress:" styleClass="status-label"/>
+            <Label fx:id="progressLabel" text="0/5 captured" styleClass="status-label"/>
+        </HBox>
+
+        <ProgressBar fx:id="progressBar" progress="0.0" prefWidth="400"/>
+    </VBox>
+
+    <!-- Status Label -->
+    <Label fx:id="statusLabel"
+           text="Ready to capture"
+           styleClass="status-label"
+           wrapText="true"/>
+
+    <!-- Buttons -->
+    <HBox spacing="15" alignment="CENTER">
+        <Button fx:id="captureButton"
+                text="Capture"
+                onAction="#handleCapture"
+                styleClass="primary-button"
+                prefWidth="120"
+                prefHeight="40"
+                defaultButton="true"/>
+
+        <Button fx:id="finishButton"
+                text="Finish"
+                onAction="#handleFinish"
+                styleClass="success-button"
+                prefWidth="120"
+                prefHeight="40"
+                disable="true"/>
+
+        <Button text="Cancel"
+                onAction="#handleCancel"
+                styleClass="secondary-button"
+                prefWidth="120"
+                prefHeight="40"
+                cancelButton="true"/>
+    </HBox>
+
+</VBox>

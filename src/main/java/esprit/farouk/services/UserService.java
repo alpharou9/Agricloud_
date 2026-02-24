@@ -145,6 +145,61 @@ public class UserService {
         return ps.executeUpdate();
     }
 
+    /**
+     * Enrolls face embeddings for a user.
+     * @param userId The user ID
+     * @param embeddingsJson JSON string of face embeddings
+     */
+    public void enrollFaceEmbeddings(long userId, String embeddingsJson) throws SQLException {
+        String sql = "UPDATE users SET face_embeddings = ?, face_enrolled_at = NOW() WHERE id = ?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setString(1, embeddingsJson);
+        ps.setLong(2, userId);
+        ps.executeUpdate();
+    }
+
+    /**
+     * Gets all users who have face recognition enabled (non-null face_embeddings) and are active.
+     * @return List of users with face enrollment
+     */
+    public List<User> getAllFaceEnabledUsers() throws SQLException {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users WHERE face_embeddings IS NOT NULL AND status = 'active'";
+        Statement st = connection.createStatement();
+        ResultSet rs = st.executeQuery(sql);
+        while (rs.next()) {
+            users.add(mapRow(rs));
+        }
+        return users;
+    }
+
+    /**
+     * Checks if a user has face enrollment.
+     * @param userId The user ID
+     * @return true if user has enrolled face, false otherwise
+     */
+    public boolean hasFaceEnrollment(long userId) throws SQLException {
+        String sql = "SELECT face_embeddings FROM users WHERE id = ?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setLong(1, userId);
+        ResultSet rs = ps.executeQuery();
+        if (rs.next()) {
+            return rs.getString("face_embeddings") != null;
+        }
+        return false;
+    }
+
+    /**
+     * Removes face enrollment data for a user.
+     * @param userId The user ID
+     */
+    public void removeFaceEnrollment(long userId) throws SQLException {
+        String sql = "UPDATE users SET face_embeddings = NULL, face_enrolled_at = NULL WHERE id = ?";
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ps.setLong(1, userId);
+        ps.executeUpdate();
+    }
+
     private User mapRow(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getLong("id"));
@@ -157,6 +212,9 @@ public class UserService {
         user.setStatus(rs.getString("status"));
         Timestamp emailVerified = rs.getTimestamp("email_verified_at");
         if (emailVerified != null) user.setEmailVerifiedAt(emailVerified.toLocalDateTime());
+        user.setFaceEmbeddings(rs.getString("face_embeddings"));
+        Timestamp faceEnrolled = rs.getTimestamp("face_enrolled_at");
+        if (faceEnrolled != null) user.setFaceEnrolledAt(faceEnrolled.toLocalDateTime());
         Timestamp createdAt = rs.getTimestamp("created_at");
         if (createdAt != null) user.setCreatedAt(createdAt.toLocalDateTime());
         Timestamp updatedAt = rs.getTimestamp("updated_at");
