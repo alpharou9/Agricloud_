@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="esprit.rania.controller.CommentController"
+            prefHeight="640.0" prefWidth="1100.0"
+            styleClass="content-area">
+
+    <top>
+        <VBox spacing="12">
+            <padding><Insets top="16" right="24" bottom="12" left="24"/></padding>
+
+            <!-- Page header bar -->
+            <HBox alignment="CENTER_LEFT" spacing="14" styleClass="page-header-bar">
+                <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+                <Label text="💬" style="-fx-font-size: 22;"/>
+                <VBox spacing="2">
+                    <Label text="All Comments" styleClass="page-header-title"/>
+                    <Label text="Browse and manage comments across all posts" styleClass="page-header-subtitle"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <!-- Total count badge -->
+                <HBox styleClass="stats-badge" spacing="6" alignment="CENTER">
+                    <padding><Insets top="6" right="14" bottom="6" left="14"/></padding>
+                    <Label text="Comments:" styleClass="stats-badge-label"/>
+                    <Label fx:id="commentCountLabel" text="0" styleClass="stats-badge-value"/>
+                </HBox>
+                <Button text="+ New Comment" onAction="#handleShowAddForm" styleClass="btn-new-post"/>
+            </HBox>
+
+            <!-- Filter row -->
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="Filter by post:" styleClass="field-label"/>
+                <ComboBox fx:id="postComboBox"
+                         promptText="All posts (show everything)"
+                         styleClass="post-selector"
+                         HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Button text="✕  Clear Filter" onAction="#handleClearFilter" styleClass="btn-clear-filter"/>
+                <Button text="🔄  Refresh" onAction="#handleRefresh" styleClass="btn-refresh-green"/>
+            </HBox>
+
+            <!-- Active filter banner -->
+            <HBox fx:id="filterBanner" styleClass="filter-banner"
+                  alignment="CENTER_LEFT" spacing="8"
+                  visible="false" managed="false">
+                <padding><Insets top="8" right="14" bottom="8" left="14"/></padding>
+                <Label text="🔍" style="-fx-font-size: 13;"/>
+                <Label fx:id="filterBannerLabel" text="Showing comments for: …" styleClass="filter-banner-text"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Hyperlink text="Show all comments" onAction="#handleClearFilter" styleClass="filter-banner-link"/>
+            </HBox>
+
+            <!-- Add/Edit Comment Form (hidden by default) -->
+            <VBox fx:id="commentFormPanel" spacing="12" styleClass="write-form-panel"
+                  visible="false" managed="false">
+                <padding><Insets top="18" right="20" bottom="18" left="20"/></padding>
+                <Label fx:id="commentFormTitleLabel" text="✍ Add a New Comment" styleClass="write-form-title"/>
+                <Separator style="-fx-background-color: #d1fae5;"/>
+                
+                <!-- Post selection for new comment -->
+                <VBox spacing="5">
+                    <Label text="Post" styleClass="field-label"/>
+                    <ComboBox fx:id="commentPostCombo"
+                             promptText="Select the post to comment on..."
+                             styleClass="post-selector" maxWidth="Infinity"/>
+                </VBox>
+                
+                <HBox spacing="14">
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <Label text="Author" styleClass="field-label"/>
+                        <TextField fx:id="commentAuthorField" promptText="Your name" styleClass="text-input"/>
+                    </VBox>
+                </HBox>
+                
+                <VBox spacing="5">
+                    <Label text="Comment" styleClass="field-label"/>
+                    <TextArea fx:id="commentContentArea"
+                             promptText="Write your comment here..."
+                             wrapText="true" prefRowCount="4" styleClass="text-input"/>
+                </VBox>
+                
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <Button text="Cancel" onAction="#handleCancelCommentForm" styleClass="btn-clear"/>
+                    <Button fx:id="commentSubmitButton" text="Post Comment"
+                           onAction="#handleSubmitCommentForm" styleClass="btn-publish"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </top>
+
+    <!-- COMMENTS FEED -->
+    <center>
+        <ScrollPane fx:id="commentsScrollPane" fitToWidth="true"
+                   styleClass="posts-scroll" hbarPolicy="NEVER">
+            <VBox fx:id="commentsContainer" spacing="10" styleClass="posts-feed">
+                <padding><Insets top="8" right="24" bottom="24" left="24"/></padding>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+</BorderPane>

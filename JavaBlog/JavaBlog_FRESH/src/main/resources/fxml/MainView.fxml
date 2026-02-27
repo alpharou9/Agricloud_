@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            prefHeight="700.0" prefWidth="1200.0"
+            styleClass="content-area">
+
+    <!-- Top Green Header Bar -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="top-header">
+            <padding><Insets top="18" right="28" bottom="18" left="28"/></padding>
+            <VBox spacing="2">
+                <Label text="🌿 AgriCloud" styleClass="header-brand-title"/>
+                <Label text="Blog Management System" styleClass="header-brand-subtitle"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Posts &amp; Comments Module" styleClass="header-badge"/>
+        </HBox>
+    </top>
+
+    <!-- Center - Tab Pane -->
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="main-tab-pane">
+            
+            <!-- Posts Tab -->
+            <Tab text="📝  Posts">
+                <fx:include source="PostView.fxml"/>
+            </Tab>
+            
+            <!-- Comments Tab -->
+            <Tab text="💬  Comments">
+                <fx:include source="CommentView.fxml"/>
+            </Tab>
+            
+        </TabPane>
+    </center>
+
+</BorderPane>
