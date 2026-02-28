@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
@@ -189,6 +190,52 @@
         </VBox>
 
     </HBox>
+
+    <!-- QR Code Contact Card -->
+    <VBox spacing="15.0" styleClass="card">
+        <VBox.margin>
+            <Insets top="20.0"/>
+        </VBox.margin>
+        <padding>
+            <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+        </padding>
+
+        <Label text="📱 Contact QR Code" styleClass="card-title">
+            <font>
+                <Font name="System Bold" size="20.0"/>
+            </font>
+        </Label>
+
+        <Separator/>
+
+        <HBox spacing="30.0" alignment="CENTER_LEFT">
+            <!-- QR Code Image -->
+            <ImageView fx:id="qrCodeImageView" fitWidth="180" fitHeight="180"
+                       preserveRatio="true" smooth="true"
+                       style="-fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-border-radius: 4;"/>
+
+            <!-- Description -->
+            <VBox spacing="12.0">
+                <Label text="Scan to save contact" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                <Label text="Point your iPhone camera at this QR code — it will instantly offer to save the contact."
+                       wrapText="true" style="-fx-text-fill: #666; -fx-font-size: 13px;" prefWidth="320"/>
+
+                <VBox spacing="6.0" style="-fx-background-color: #e8f5e9; -fx-padding: 12; -fx-background-radius: 8;">
+                    <Label text="✓ Works with iPhone Camera app" style="-fx-text-fill: #2e7d32; -fx-font-size: 12px;"/>
+                    <Label text="✓ Saved as vCard (name, email, phone, role)" style="-fx-text-fill: #2e7d32; -fx-font-size: 12px;"/>
+                    <Label text="✓ Refreshes when profile is updated" style="-fx-text-fill: #2e7d32; -fx-font-size: 12px;"/>
+                </VBox>
+
+                <Button fx:id="downloadQrButton" text="💾  Download QR Code"
+                        onAction="#handleDownloadQR" styleClass="secondary-button"
+                        prefHeight="40.0">
+                    <font>
+                        <Font name="System Bold" size="13.0"/>
+                    </font>
+                </Button>
+            </VBox>
+        </HBox>
+    </VBox>
 
     <!-- Face Recognition Section (Admin Only) -->
     <VBox fx:id="faceRecognitionSection" spacing="20.0" styleClass="card" visible="false" managed="false">

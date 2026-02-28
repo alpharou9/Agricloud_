@@ -1,5 +1,11 @@
 package esprit.farouk.controllers;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import esprit.farouk.models.User;
 import esprit.farouk.services.UserService;
 import esprit.farouk.utils.SessionManager;
@@ -9,12 +15,22 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.mindrot.jbcrypt.BCrypt;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ProfileController {
 
@@ -71,6 +87,12 @@ public class ProfileController {
 
     @FXML
     private Label userIdLabel;
+
+    @FXML
+    private ImageView qrCodeImageView;
+
+    @FXML
+    private Button downloadQrButton;
 
     @FXML
     private VBox faceRecognitionSection;
@@ -144,6 +166,9 @@ public class ProfileController {
             updatedAtLabel.setText(currentUser.getUpdatedAt().format(formatter));
         }
         userIdLabel.setText("#" + currentUser.getId());
+
+        // Regenerate QR code with latest profile data
+        generateAndDisplayQR();
     }
 
     @FXML
@@ -308,6 +333,110 @@ public class ProfileController {
         passwordSuccessLabel.setText(message);
         passwordSuccessLabel.setVisible(true);
         passwordErrorLabel.setVisible(false);
+    }
+
+    // ========== QR Code Methods ==========
+
+    /**
+     * Builds a vCard 3.0 string from the current user.
+     * vCard 3.0 is required for iPhone Camera app detection.
+     */
+    private String buildVCard(User user) {
+        String fullName = user.getName() != null ? user.getName().trim() : "";
+        String[] parts = fullName.split(" ", 2);
+        String firstName = parts[0];
+        String lastName = parts.length > 1 ? parts[1] : "";
+
+        StringBuilder vc = new StringBuilder();
+        vc.append("BEGIN:VCARD\r\n");
+        vc.append("VERSION:3.0\r\n");
+        vc.append("FN:").append(fullName).append("\r\n");
+        vc.append("N:").append(lastName).append(";").append(firstName).append(";;;\r\n");
+        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+            vc.append("EMAIL;TYPE=INTERNET:").append(user.getEmail()).append("\r\n");
+        }
+        if (user.getPhone() != null && !user.getPhone().isEmpty()) {
+            vc.append("TEL;TYPE=CELL:").append(user.getPhone()).append("\r\n");
+        }
+        vc.append("ORG:AgriCloud\r\n");
+        if (user.getRoleName() != null) {
+            vc.append("TITLE:").append(user.getRoleName()).append("\r\n");
+        }
+        vc.append("END:VCARD\r\n");
+        return vc.toString();
+    }
+
+    /**
+     * Encodes the given text as a QR code and returns a JavaFX Image.
+     */
+    private Image encodeQR(String content, int size) throws Exception {
+        Map<EncodeHintType, Object> hints = new HashMap<>();
+        hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+        hints.put(EncodeHintType.MARGIN, 2);
+        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+
+        BitMatrix bitMatrix = new QRCodeWriter()
+                .encode(content, BarcodeFormat.QR_CODE, size, size, hints);
+
+        BufferedImage buffered = MatrixToImageWriter.toBufferedImage(bitMatrix);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(buffered, "PNG", baos);
+        return new Image(new ByteArrayInputStream(baos.toByteArray()));
+    }
+
+    /**
+     * Generates the vCard QR code and sets it on the ImageView.
+     */
+    private void generateAndDisplayQR() {
+        try {
+            String vcard = buildVCard(currentUser);
+            Image qrImage = encodeQR(vcard, 200);
+            qrCodeImageView.setImage(qrImage);
+        } catch (Exception e) {
+            System.err.println("Failed to generate QR code: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Downloads the QR code as a PNG file chosen by the user.
+     */
+    @FXML
+    private void handleDownloadQR() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save QR Code");
+        String safeName = currentUser.getName() != null
+                ? currentUser.getName().replaceAll("[^a-zA-Z0-9_-]", "_")
+                : "contact";
+        chooser.setInitialFileName(safeName + "_contact_qr.png");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Image", "*.png"));
+
+        File file = chooser.showSaveDialog(downloadQrButton.getScene().getWindow());
+        if (file == null) return;
+
+        try {
+            String vcard = buildVCard(currentUser);
+            Map<EncodeHintType, Object> hints = new HashMap<>();
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+            hints.put(EncodeHintType.MARGIN, 2);
+            hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+
+            BitMatrix bitMatrix = new QRCodeWriter()
+                    .encode(vcard, BarcodeFormat.QR_CODE, 400, 400, hints);
+            MatrixToImageWriter.writeToPath(bitMatrix, "PNG", file.toPath());
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("QR Code Saved");
+            alert.setHeaderText(null);
+            alert.setContentText("QR code saved to:\n" + file.getAbsolutePath());
+            alert.showAndWait();
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Save Failed");
+            alert.setHeaderText(null);
+            alert.setContentText("Could not save QR code: " + e.getMessage());
+            alert.showAndWait();
+        }
     }
 
     // ========== Face Recognition Methods ==========
