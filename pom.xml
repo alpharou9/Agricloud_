@@ -91,6 +91,18 @@
             <version>1.5.10</version>
         </dependency>
 
+        <!-- ZXing QR Code Generator -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.2</version>
+        </dependency>
+
         <!-- JUnit for testing (optional but recommended) -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
