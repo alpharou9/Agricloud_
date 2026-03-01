@@ -34,7 +34,7 @@ build/
 ### VS Code ###
 .vscode/
 
-### Claude Code ###
+### Local config ###
 .claude/
 
 ### Mac OS ###
