@@ -182,6 +182,24 @@ private static final String SENDER_PASSWORD = "your-app-password";
 3. Create OAuth 2.0 credentials
 4. Add `http://localhost:3000/oauth/callback` as an authorized redirect URI
 5. Update `OAuthConfig.java` with your Client ID and Secret
+6. Ensure port 3000 is free before launching: `netstat -ano | findstr :3000`
+
+### Twilio SMS setup (for SMS notifications)
+1. Create a free account at [twilio.com](https://www.twilio.com)
+2. Get your **Account SID**, **Auth Token**, and a **Twilio phone number**
+3. Update `SMSUtils.java`:
+```java
+private static final String ACCOUNT_SID = "your-account-sid";
+private static final String AUTH_TOKEN  = "your-auth-token";
+private static final String FROM_NUMBER = "+1XXXXXXXXXX"; // Your Twilio number
+```
+
+### Face recognition setup
+1. Download the ONNX model files (not included in the repository due to size):
+   - `face_detection_yunet_2023mar.onnx`
+   - `face_recognition_sface_2021dec.onnx`
+2. Place both files in `src/main/resources/models/`
+3. Ensure a webcam is connected before using face login or enrollment
 
 ---
 
@@ -193,7 +211,8 @@ src/
 │   ├── java/esprit/farouk/
 │   │   ├── Main.java
 │   │   ├── config/
-│   │   │   └── DatabaseConfig.java
+│   │   │   ├── DatabaseConfig.java
+│   │   │   └── OAuthConfig.java
 │   │   ├── controllers/
 │   │   │   ├── LoginController.java
 │   │   │   ├── RegisterController.java
@@ -230,6 +249,7 @@ src/
 │   │       ├── SMSUtils.java           ├── QRCodeUtils.java
 │   │       ├── FaceUtils.java          ├── CameraUtils.java
 │   │       ├── TranslationUtils.java   ├── UIUtils.java
+│   │       └── SessionManager.java
 │   └── resources/
 │       ├── fxml/
 │       │   ├── login.fxml          ├── register.fxml
@@ -287,6 +307,11 @@ Customer: customer@customer.com / farouk
 |-------|-------------|
 | `events` | Events with capacity and geolocation |
 | `participations` | User registrations with attendance tracking |
+
+### Supporting Tables
+| Table | Description |
+|-------|-------------|
+| `user_activity_logs` | Audit log of user actions across the system |
 
 ---
 
