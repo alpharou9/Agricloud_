@@ -764,3 +764,77 @@
 
 /* Color Success (for checkmark) */
 -color-success: #16a34a;
+
+/* ===== Chatbot Sidebar Button ===== */
+.sidebar-button-chatbot {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-padding: 10 15;
+    -fx-cursor: hand;
+    -fx-font-size: 13;
+}
+
+.sidebar-button-chatbot:hover {
+    -fx-background-color: #15803d;
+}
+
+/* ===== Chatbot Window ===== */
+.chatbot-window {
+    -fx-background-color: #f8fafc;
+}
+
+/* ===== Chat Bubbles ===== */
+.chat-bubble-bot {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16 16 16 4;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 16 16 16 4;
+    -fx-border-width: 1;
+    -fx-padding: 10 14;
+    -fx-text-fill: #1e293b;
+    -fx-font-size: 13;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 4, 0, 0, 2);
+}
+
+.chat-bubble-user {
+    -fx-background-color: #16a34a;
+    -fx-background-radius: 16 16 4 16;
+    -fx-padding: 10 14;
+    -fx-text-fill: white;
+    -fx-font-size: 13;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.25), 6, 0, 0, 2);
+}
+
+/* ===== Chatbot Input ===== */
+.chatbot-input {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-color: #e2e8f0;
+    -fx-background-color: white;
+    -fx-padding: 10 16;
+    -fx-font-size: 13;
+}
+
+.chatbot-input:focused {
+    -fx-border-color: #16a34a;
+}
+
+/* ===== Chatbot Send Button ===== */
+.chatbot-send-btn {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-background-radius: 20;
+    -fx-padding: 10 20;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.chatbot-send-btn:hover {
+    -fx-background-color: #15803d;
+}
+
+.chatbot-send-btn:disabled {
+    -fx-background-color: #86efac;
+}

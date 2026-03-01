@@ -222,7 +222,9 @@ public class FaceLoginController {
             controller.setCurrentUser(user);
 
             Stage stage = (Stage) cameraPreview.getScene().getWindow();
-            stage.setScene(new Scene(root, 1200, 700));
+            Scene scene = new Scene(root, 1200, 700);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
             stage.setTitle("AgriCloud - Dashboard");
 
         } catch (Exception e) {
@@ -236,7 +238,9 @@ public class FaceLoginController {
             Parent root = loader.load();
 
             Stage stage = (Stage) cameraPreview.getScene().getWindow();
-            stage.setScene(new Scene(root, 800, 650));
+            Scene scene = new Scene(root, 800, 650);
+            scene.getStylesheets().add(getClass().getResource("/css/style.css").toExternalForm());
+            stage.setScene(scene);
             stage.setTitle("AgriCloud - Login");
 
         } catch (Exception e) {

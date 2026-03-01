@@ -29,6 +29,7 @@
 
             <Region VBox.vgrow="ALWAYS"/>
 
+            <Button text="💬 AI Assistant" onAction="#handleOpenChatbot" styleClass="sidebar-button-chatbot" maxWidth="Infinity"/>
             <Button text="Logout" onAction="#handleLogout" styleClass="sidebar-button-logout" maxWidth="Infinity"/>
         </VBox>
     </left>
