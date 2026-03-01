@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" spacing="25" styleClass="login-container"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="esprit.farouk.controllers.FaceLoginController">
+
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+
+    <!-- Title -->
+    <Label text="AgriCloud" styleClass="title">
+        <font>
+            <Font name="System Bold" size="32.0"/>
+        </font>
+    </Label>
+
+    <Label text="Face Recognition Login" styleClass="subtitle">
+        <font>
+            <Font size="18.0"/>
+        </font>
+    </Label>
+
+    <!-- Camera Preview -->
+    <ImageView fx:id="cameraView" fitWidth="640" fitHeight="480"
+               preserveRatio="true" styleClass="camera-frame">
+        <VBox.margin>
+            <Insets top="10"/>
+        </VBox.margin>
+    </ImageView>
+
+    <!-- Status Label -->
+    <Label fx:id="statusLabel" text="Position your face in the frame"
+           styleClass="status-label" wrapText="true" maxWidth="600" textAlignment="CENTER">
+        <font>
+            <Font size="14.0"/>
+        </font>
+    </Label>
+
+    <!-- Progress Indicator -->
+    <ProgressIndicator fx:id="progressIndicator" visible="false"/>
+
+    <!-- Buttons -->
+    <VBox spacing="12" alignment="CENTER">
+        <Button fx:id="scanButton" text="Scan Face" onAction="#handleScanFace"
+                prefWidth="250" prefHeight="45" styleClass="face-login-button">
+            <font>
+                <Font name="System Bold" size="16.0"/>
+            </font>
+        </Button>
+
+        <Button fx:id="usePasswordButton" text="Use Password Instead" onAction="#handleUsePassword"
+                prefWidth="250" prefHeight="40" styleClass="secondary-button">
+            <font>
+                <Font size="14.0"/>
+            </font>
+        </Button>
+    </VBox>
+
+    <!-- Help Text -->
+    <Label text="Make sure your face is well-lit and clearly visible to the camera."
+           styleClass="help-text" wrapText="true" maxWidth="500" textAlignment="CENTER">
+        <font>
+            <Font size="12.0"/>
+        </font>
+    </Label>
+
+</VBox>
