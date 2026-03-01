@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+
+<BorderPane prefHeight="850.0" prefWidth="1550.0" style="-fx-background-color: #f0f4f0;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tn.esprit.controllers.EventController">
+    <left>
+        <VBox prefWidth="240.0" spacing="15" style="-fx-background-color: #27ae60;">
+            <padding><Insets bottom="25" left="20" right="20" top="25" /></padding>
+            <Label style="-fx-text-fill: white; -fx-font-size: 26; -fx-font-weight: bold;" text="AgriCloud" />
+            <Separator opacity="0.3" />
+            <Button maxWidth="Infinity" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;" text="Dashboard" />
+            <Region VBox.vgrow="ALWAYS" />
+            <Button maxWidth="Infinity" onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Logout" />
+        </VBox>
+    </left>
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+                <Tab text="⚙️ Management">
+                    <HBox spacing="20.0">
+                        <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
+                        <VBox prefWidth="750.0" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 15;">
+                            <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
+                            <Label style="-fx-font-size: 20; -fx-text-fill: #27ae60; -fx-font-weight: bold;" text="Events" />
+                            <GridPane hgap="10" vgap="10">
+                                <TextField fx:id="titleF" promptText="Event Title" />
+                                <TextField fx:id="locF" promptText="Location" GridPane.columnIndex="1" />
+                                <TextArea fx:id="descF" prefHeight="60" promptText="Description" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                                <DatePicker fx:id="dateF" maxWidth="Infinity" promptText="Date" GridPane.rowIndex="2" />
+                                <TextField fx:id="slotsF" promptText="Slots (Number)" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                            </GridPane>
+                            <HBox spacing="10">
+                                <Button onAction="#addEvent" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Add" />
+                                <Button onAction="#updateEvent" style="-fx-background-color: #2980b9; -fx-text-fill: white;" text="Update" />
+                                <Button onAction="#deleteEvent" style="-fx-background-color: #c0392b; -fx-text-fill: white;" text="Delete" />
+                            </HBox>
+                            <Separator />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <TextField fx:id="searchEventF" promptText="🔍 Search Title..." HBox.hgrow="ALWAYS" />
+                                <ComboBox fx:id="sortEventCombo" promptText="Sort (A-Z)" />
+                            </HBox>
+                            <TableView fx:id="eventTab" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="colT" prefWidth="120" text="Title" />
+                                    <TableColumn fx:id="colDate" prefWidth="110" text="Date" />
+                                    <TableColumn fx:id="colL" prefWidth="100" text="Location" />
+                                    <TableColumn fx:id="colSlo" prefWidth="60" text="Slots" />
+                                    <TableColumn fx:id="colD" prefWidth="150" text="Description" />
+                                </columns>
+                            </TableView>
+                        </VBox>
+
+                        <VBox prefWidth="750.0" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 15;">
+                            <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
+                            <Label style="-fx-font-size: 20; -fx-text-fill: #27ae60; -fx-font-weight: bold;" text="Participants" />
+                            <GridPane hgap="10" vgap="10">
+                                <ComboBox fx:id="eventDrop" maxWidth="Infinity" promptText="Assign to Event" />
+                                <TextField fx:id="nameF" promptText="Full Name" GridPane.columnIndex="1" />
+                                <TextField fx:id="emailF" promptText="Email" GridPane.rowIndex="1" />
+                                <TextField fx:id="phoneF" promptText="Phone" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <ComboBox fx:id="statusDrop" maxWidth="Infinity" promptText="Set Status" GridPane.rowIndex="2" />
+                            </GridPane>
+                            <HBox spacing="10">
+                                <Button onAction="#addParticipation" style="-fx-background-color: #27ae60; -fx-text-fill: white;" text="Confirm" />
+                                <Button onAction="#updateParticipation" style="-fx-background-color: #2980b9; -fx-text-fill: white;" text="Update" />
+                                <Button onAction="#deleteParticipation" style="-fx-background-color: #c0392b; -fx-text-fill: white;" text="Delete" />
+                                <Button onAction="#printTicket" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold;" text="🖨️ Print Ticket" />
+                            </HBox>
+                            <Separator />
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <TextField fx:id="searchPartF" promptText="🔍 Search Name..." HBox.hgrow="ALWAYS" />
+                                <ComboBox fx:id="filterStatusCombo" promptText="Filter by Status" />
+                            </HBox>
+                            <TableView fx:id="partTab" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="colEventTitle" prefWidth="130" text="Event Name" />
+                                    <TableColumn fx:id="colN" prefWidth="130" text="Name" />
+                                    <TableColumn fx:id="colS" prefWidth="100" text="Status" />
+                                    <TableColumn fx:id="colE" prefWidth="150" text="Email" />
+                                    <TableColumn fx:id="colP" prefWidth="100" text="Phone" />
+                                </columns>
+                            </TableView>
+                        </VBox>
+                    </HBox>
+                </Tab>
+
+                <Tab text="📊 Visual Analytics">
+                    <VBox spacing="20" alignment="TOP_CENTER" style="-fx-padding: 30;">
+                        <Label style="-fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #27ae60;" text="Event Statistics Dashboard" />
+                        <HBox spacing="30" alignment="CENTER">
+                            <VBox style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
+                                <Label style="-fx-font-weight: bold;" text="Attendance Status" />
+                                <PieChart fx:id="statusPieChart" prefHeight="350.0" prefWidth="400.0" />
+                            </VBox>
+                            <VBox style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);">
+                                <Label style="-fx-font-weight: bold;" text="Popularity (Attendees per Event)" />
+                                <BarChart fx:id="eventBarChart" prefHeight="350.0" prefWidth="500.0">
+                                    <xAxis><CategoryAxis side="BOTTOM" fx:id="xAxis" /></xAxis>
+                                    <yAxis><NumberAxis side="LEFT" /> </yAxis>
+                                </BarChart>
+                            </VBox>
+                        </HBox>
+                        <Button onAction="#refreshCharts" prefWidth="200" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14;" text="Refresh Charts" />
+                    </VBox>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+</BorderPane>

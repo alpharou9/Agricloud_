@@ -1,1 +1,1 @@
-# AgriCloud - Blog Module
+# AgriCloud - Event Module
