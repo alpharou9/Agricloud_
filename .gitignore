@@ -50,6 +50,7 @@ models/*.onnx
 oauth-credentials.txt
 
 ### Documentation Files ###
-# Exclude all markdown files except models/README.md
-*.md
+# Exclude internal markdown files
+PREPARATION_GUIDE.md
+!README.md
 !models/README.md
