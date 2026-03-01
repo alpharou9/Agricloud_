@@ -52,5 +52,6 @@ oauth-credentials.txt
 ### Documentation Files ###
 # Exclude internal markdown files
 PREPARATION_GUIDE.md
+CLAUDE.md
 !README.md
 !models/README.md
