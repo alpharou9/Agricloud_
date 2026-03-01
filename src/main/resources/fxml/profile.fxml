@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="esprit.farouk.controllers.ProfileController"
+            fitToWidth="true" style="-fx-background-color: #f5f7fa;">
+
+<VBox spacing="0" style="-fx-background-color: #f5f7fa;">
+
+    <padding>
+        <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+    </padding>
+
+    <!-- Header Card -->
+    <HBox alignment="CENTER_LEFT" spacing="15.0" styleClass="card" style="-fx-padding: 20px 25px;">
+        <VBox.margin>
+            <Insets bottom="20.0"/>
+        </VBox.margin>
+
+        <Label text="👤 My Profile" styleClass="card-title">
+            <font>
+                <Font name="System Bold" size="24.0"/>
+            </font>
+        </Label>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="statusBadge" text="Active" styleClass="badge-success">
+            <font>
+                <Font name="System Bold" size="13.0"/>
+            </font>
+        </Label>
+    </HBox>
+
+    <!-- Profile Content -->
+    <HBox spacing="20.0" VBox.vgrow="ALWAYS">
+
+        <!-- Left Column - Profile Info -->
+        <VBox spacing="20.0" prefWidth="450.0" styleClass="card">
+            <padding>
+                <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+            </padding>
+            <Label text="📝 Profile Information" styleClass="card-title">
+                <font>
+                    <Font name="System Bold" size="20.0"/>
+                </font>
+            </Label>
+
+            <Separator/>
+
+            <!-- Name Field -->
+            <VBox spacing="8.0">
+                <Label text="Full Name" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="nameField" styleClass="text-field" prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Email Field -->
+            <VBox spacing="8.0">
+                <Label text="Email Address" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="emailField" styleClass="text-field" prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Phone Field -->
+            <VBox spacing="8.0">
+                <Label text="Phone Number" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="phoneField" styleClass="text-field" prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Role Display (Read-only) -->
+            <VBox spacing="8.0">
+                <Label text="Role" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <TextField fx:id="roleField" editable="false" styleClass="text-field" prefHeight="40.0"
+                           style="-fx-background-color: #f5f5f5; -fx-opacity: 0.7;"/>
+            </VBox>
+
+            <!-- Error/Success Messages -->
+            <Label fx:id="profileErrorLabel" textFill="RED" wrapText="true" visible="false" styleClass="error-label"/>
+            <Label fx:id="profileSuccessLabel" textFill="GREEN" wrapText="true" visible="false" styleClass="success-label"/>
+
+            <!-- Save Button -->
+            <Button fx:id="saveProfileButton" text="Save Changes" onAction="#handleSaveProfile" prefHeight="45.0"
+                    styleClass="primary-button" maxWidth="Infinity">
+                <font>
+                    <Font name="System Bold" size="15.0"/>
+                </font>
+            </Button>
+
+        </VBox>
+
+        <!-- Right Column - Change Password -->
+        <VBox spacing="20.0" prefWidth="450.0" styleClass="card">
+            <padding>
+                <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+            </padding>
+
+            <Label text="🔒 Change Password" styleClass="card-title">
+                <font>
+                    <Font name="System Bold" size="20.0"/>
+                </font>
+            </Label>
+
+            <Separator/>
+
+            <!-- Current Password -->
+            <VBox spacing="8.0">
+                <Label text="Current Password" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <PasswordField fx:id="currentPasswordField" promptText="Enter current password"
+                               styleClass="text-field" prefHeight="40.0"/>
+            </VBox>
+
+            <!-- New Password -->
+            <VBox spacing="8.0">
+                <Label text="New Password" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <PasswordField fx:id="newPasswordField" promptText="Minimum 6 characters"
+                               styleClass="text-field" prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Confirm New Password -->
+            <VBox spacing="8.0">
+                <Label text="Confirm New Password" styleClass="field-label">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+                <PasswordField fx:id="confirmPasswordField" promptText="Re-enter new password"
+                               styleClass="text-field" prefHeight="40.0"/>
+            </VBox>
+
+            <!-- Password Strength Indicator -->
+            <Label fx:id="passwordStrengthLabel" text="" styleClass="field-label" visible="false">
+                <font>
+                    <Font size="12.0"/>
+                </font>
+            </Label>
+
+            <!-- Error/Success Messages -->
+            <Label fx:id="passwordErrorLabel" textFill="RED" wrapText="true" visible="false" styleClass="error-label"/>
+            <Label fx:id="passwordSuccessLabel" textFill="GREEN" wrapText="true" visible="false" styleClass="success-label"/>
+
+            <!-- Change Password Button -->
+            <Button fx:id="changePasswordButton" text="Change Password" onAction="#handleChangePassword"
+                    prefHeight="45.0" styleClass="primary-button" maxWidth="Infinity">
+                <font>
+                    <Font name="System Bold" size="15.0"/>
+                </font>
+            </Button>
+
+            <!-- Spacer -->
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Info Box -->
+            <VBox spacing="10.0" style="-fx-background-color: #e3f2fd; -fx-padding: 15; -fx-background-radius: 8;">
+                <Label text="💡 Password Tips:" styleClass="field-label">
+                    <font>
+                        <Font name="System Bold" size="13.0"/>
+                    </font>
+                </Label>
+                <Label text="• Minimum 6 characters" style="-fx-text-fill: #555; -fx-font-size: 12px;"/>
+                <Label text="• Use mix of letters and numbers" style="-fx-text-fill: #555; -fx-font-size: 12px;"/>
+                <Label text="• Avoid common passwords" style="-fx-text-fill: #555; -fx-font-size: 12px;"/>
+            </VBox>
+
+        </VBox>
+
+    </HBox>
+
+    <!-- QR Code Contact Card -->
+    <VBox spacing="15.0" styleClass="card">
+        <VBox.margin>
+            <Insets top="20.0"/>
+        </VBox.margin>
+        <padding>
+            <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+        </padding>
+
+        <Label text="📱 Contact QR Code" styleClass="card-title">
+            <font>
+                <Font name="System Bold" size="20.0"/>
+            </font>
+        </Label>
+
+        <Separator/>
+
+        <HBox spacing="30.0" alignment="CENTER_LEFT">
+            <!-- QR Code Image -->
+            <ImageView fx:id="qrCodeImageView" fitWidth="180" fitHeight="180"
+                       preserveRatio="true" smooth="true"
+                       style="-fx-border-color: #e0e0e0; -fx-border-width: 1; -fx-border-radius: 4;"/>
+
+            <!-- Description -->
+            <VBox spacing="12.0">
+                <Label text="Scan to save contact" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                <Label text="Point your iPhone camera at this QR code — it will instantly offer to save the contact."
+                       wrapText="true" style="-fx-text-fill: #666; -fx-font-size: 13px;" prefWidth="320"/>
+
+                <VBox spacing="6.0" style="-fx-background-color: #e8f5e9; -fx-padding: 12; -fx-background-radius: 8;">
+                    <Label text="✓ Works with iPhone Camera app" style="-fx-text-fill: #2e7d32; -fx-font-size: 12px;"/>
+                    <Label text="✓ Saved as vCard (name, email, phone, role)" style="-fx-text-fill: #2e7d32; -fx-font-size: 12px;"/>
+                    <Label text="✓ Refreshes when profile is updated" style="-fx-text-fill: #2e7d32; -fx-font-size: 12px;"/>
+                </VBox>
+
+                <Button fx:id="downloadQrButton" text="💾  Download QR Code"
+                        onAction="#handleDownloadQR" styleClass="secondary-button"
+                        prefHeight="40.0">
+                    <font>
+                        <Font name="System Bold" size="13.0"/>
+                    </font>
+                </Button>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- Face Recognition Section (Admin Only) -->
+    <VBox fx:id="faceRecognitionSection" spacing="20.0" styleClass="card" visible="false" managed="false">
+        <VBox.margin>
+            <Insets top="20.0"/>
+        </VBox.margin>
+        <padding>
+            <Insets top="25.0" right="25.0" bottom="25.0" left="25.0"/>
+        </padding>
+
+        <Label text="👤 Face Recognition" styleClass="card-title">
+            <font>
+                <Font name="System Bold" size="20.0"/>
+            </font>
+        </Label>
+
+        <Separator/>
+
+        <!-- Face Enrollment Status -->
+        <VBox spacing="10.0">
+            <Label fx:id="faceStatusLabel" text="Face recognition not enrolled" style="-fx-text-fill: #666;">
+                <font>
+                    <Font size="14.0"/>
+                </font>
+            </Label>
+            <Label text="Face recognition allows you to login securely without a password using facial authentication."
+                   wrapText="true" style="-fx-text-fill: #999; -fx-font-size: 13px;"/>
+        </VBox>
+
+        <!-- Face Error/Success Messages -->
+        <Label fx:id="faceErrorLabel" textFill="RED" wrapText="true" visible="false" styleClass="error-label"/>
+        <Label fx:id="faceSuccessLabel" textFill="GREEN" wrapText="true" visible="false" styleClass="success-label"/>
+
+        <!-- Face Action Buttons -->
+        <HBox spacing="15.0">
+            <Button fx:id="setupFaceButton" text="Setup Face Recognition" onAction="#handleSetupFace"
+                    prefHeight="45.0" styleClass="primary-button">
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Button>
+
+            <Button fx:id="removeFaceButton" text="Remove Face Data" onAction="#handleRemoveFace"
+                    prefHeight="45.0" styleClass="secondary-button" visible="false" managed="false">
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Button>
+        </HBox>
+
+        <!-- Info Box -->
+        <VBox spacing="10.0" style="-fx-background-color: #fff3cd; -fx-padding: 15; -fx-background-radius: 8;">
+            <Label text="Privacy and Security:" styleClass="field-label">
+                <font>
+                    <Font name="System Bold" size="13.0"/>
+                </font>
+            </Label>
+            <Label text="- Only mathematical embeddings are stored (not actual images)"
+                   style="-fx-text-fill: #856404; -fx-font-size: 12px;"/>
+            <Label text="- Embeddings cannot be reversed to recreate your face"
+                   style="-fx-text-fill: #856404; -fx-font-size: 12px;"/>
+            <Label text="- Password login remains available as a backup"
+                   style="-fx-text-fill: #856404; -fx-font-size: 12px;"/>
+        </VBox>
+
+    </VBox>
+
+    <!-- Account Info Footer -->
+    <HBox spacing="20.0" style="-fx-background-color: #f5f5f5; -fx-padding: 15; -fx-background-radius: 8;">
+        <VBox spacing="5.0">
+            <Label text="Account Created:" styleClass="field-label">
+                <font>
+                    <Font size="12.0"/>
+                </font>
+            </Label>
+            <Label fx:id="createdAtLabel" text="N/A" style="-fx-text-fill: #666;">
+                <font>
+                    <Font size="12.0"/>
+                </font>
+            </Label>
+        </VBox>
+
+        <Separator orientation="VERTICAL"/>
+
+        <VBox spacing="5.0">
+            <Label text="Last Updated:" styleClass="field-label">
+                <font>
+                    <Font size="12.0"/>
+                </font>
+            </Label>
+            <Label fx:id="updatedAtLabel" text="N/A" style="-fx-text-fill: #666;">
+                <font>
+                    <Font size="12.0"/>
+                </font>
+            </Label>
+        </VBox>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <VBox spacing="5.0" alignment="CENTER_RIGHT">
+            <Label text="User ID:" styleClass="field-label">
+                <font>
+                    <Font size="12.0"/>
+                </font>
+            </Label>
+            <Label fx:id="userIdLabel" text="N/A" style="-fx-text-fill: #666;">
+                <font>
+                    <Font size="12.0"/>
+                </font>
+            </Label>
+        </VBox>
+    </HBox>
+
+</VBox>
+
+</ScrollPane>

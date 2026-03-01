@@ -1,0 +1,568 @@
+/* ============================================================
+   AgriCloud Blog — Full Style Sheet
+   ============================================================ */
+
+.root {
+    -fx-background-color: #f0fdf4;
+    -fx-font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ============================================================
+   TOP HEADER
+   ============================================================ */
+.top-header {
+    -fx-background-color: linear-gradient(to right, #14532d, #15803d, #16a34a, #22c55e);
+    -fx-effect: dropshadow(gaussian, rgba(21,128,61,0.4), 14, 0, 0, 5);
+}
+.header-brand-title {
+    -fx-font-size: 26; -fx-font-weight: bold; -fx-text-fill: white;
+}
+.header-brand-subtitle {
+    -fx-font-size: 13; -fx-text-fill: rgba(255,255,255,0.75);
+}
+.header-badge {
+    -fx-background-color: rgba(255,255,255,0.18);
+    -fx-text-fill: white; -fx-font-size: 12; -fx-font-weight: bold;
+    -fx-background-radius: 20;
+    -fx-border-color: rgba(255,255,255,0.35); -fx-border-radius: 20;
+    -fx-padding: 6 16;
+}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+.main-tab-pane { -fx-background-color: #f0fdf4; }
+.main-tab-pane .tab-header-area {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #d1fae5 transparent;
+}
+.main-tab-pane .tab {
+    -fx-background-color: transparent; -fx-padding: 10 22;
+    -fx-font-size: 14; -fx-font-weight: bold;
+    -fx-text-fill: #94a3b8; -fx-cursor: hand;
+}
+.main-tab-pane .tab:selected {
+    -fx-background-color: transparent; -fx-text-fill: #16a34a;
+    -fx-border-color: transparent transparent #16a34a transparent;
+    -fx-border-width: 0 0 3 0;
+}
+
+/* ============================================================
+   CONTENT / FEED AREA
+   ============================================================ */
+.content-area { -fx-background-color: #f0fdf4; }
+.posts-scroll { -fx-background-color: transparent; -fx-background: transparent; }
+.posts-scroll .viewport { -fx-background-color: transparent; }
+.posts-feed { -fx-background-color: transparent; }
+
+/* ============================================================
+   PAGE HEADER BAR
+   ============================================================ */
+.page-header-bar {
+    -fx-background-color: linear-gradient(to right, #f0fdf4, #dcfce7);
+    -fx-background-radius: 12;
+    -fx-border-color: #a7f3d0; -fx-border-radius: 12; -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.10), 8, 0, 0, 2);
+}
+.page-header-title {
+    -fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #15803d;
+}
+.page-header-subtitle { -fx-font-size: 12; -fx-text-fill: #4ade80; }
+
+/* ============================================================
+   STATS BADGE
+   ============================================================ */
+.stats-badge {
+    -fx-background-color: #16a34a; -fx-background-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.35), 6, 0, 0, 2);
+}
+.stats-badge-label { -fx-text-fill: rgba(255,255,255,0.80); -fx-font-size: 12; }
+.stats-badge-value { -fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold; }
+
+/* ============================================================
+   SEARCH FIELD
+   ============================================================ */
+.search-field {
+    -fx-background-color: white; -fx-background-radius: 24;
+    -fx-border-color: #a7f3d0; -fx-border-radius: 24; -fx-border-width: 1.5;
+    -fx-padding: 11 20; -fx-font-size: 13; -fx-prompt-text-fill: #94a3b8;
+}
+.search-field:focused {
+    -fx-border-color: #16a34a;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.22), 8, 0, 0, 0);
+}
+
+/* ============================================================
+   BLOG CARD  (each post) - Magazine Style
+   ============================================================ */
+.blog-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 20, 0, 0, 4);
+}
+.blog-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.18), 24, 0, 0, 6);
+}
+
+/* Featured image at top of card */
+.post-featured-image-container {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 16 16 0 0;
+}
+.post-featured-image {
+    -fx-background-radius: 16 16 0 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);
+}
+
+/* Post author name */
+.post-author-name {
+    -fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #15803d;
+}
+/* Post date */
+.post-date { -fx-font-size: 12; -fx-text-fill: #94a3b8; }
+
+/* Post title - Larger and more prominent */
+.post-title {
+    -fx-font-size: 24; -fx-font-weight: bold; -fx-text-fill: #0f172a;
+    -fx-line-spacing: 2;
+}
+
+/* Post content preview */
+.post-content-preview {
+    -fx-font-size: 14; -fx-text-fill: #475569; -fx-line-spacing: 4;
+}
+
+/* Comment count chip */
+.comment-chip {
+    -fx-background-color: #f0fdf4;
+    -fx-text-fill: #16a34a; -fx-font-size: 12; -fx-font-weight: bold;
+    -fx-background-radius: 20;
+    -fx-border-color: #bbf7d0; -fx-border-radius: 20; -fx-border-width: 1;
+    -fx-padding: 4 12;
+}
+
+/* Post ID chip */
+.post-id-chip {
+    -fx-background-color: #f8fafc;
+    -fx-text-fill: #94a3b8; -fx-font-size: 11;
+    -fx-background-radius: 20;
+    -fx-border-color: #e2e8f0; -fx-border-radius: 20; -fx-border-width: 1;
+    -fx-padding: 4 10;
+}
+
+/* ── Card action buttons ── */
+.card-btn-edit {
+    -fx-background-color: #eff6ff;
+    -fx-text-fill: #2563eb; -fx-font-size: 12; -fx-font-weight: bold;
+    -fx-padding: 6 14; -fx-background-radius: 8;
+    -fx-border-color: #bfdbfe; -fx-border-radius: 8; -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.card-btn-edit:hover {
+    -fx-background-color: #dbeafe; -fx-border-color: #93c5fd;
+}
+.card-btn-delete {
+    -fx-background-color: #fff1f2;
+    -fx-text-fill: #dc2626; -fx-font-size: 12; -fx-font-weight: bold;
+    -fx-padding: 6 14; -fx-background-radius: 8;
+    -fx-border-color: #fecaca; -fx-border-radius: 8; -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.card-btn-delete:hover {
+    -fx-background-color: #fee2e2; -fx-border-color: #fca5a5;
+}
+.card-btn-comments {
+    -fx-background-color: transparent;
+    -fx-text-fill: #16a34a; -fx-font-size: 12; -fx-font-weight: bold;
+    -fx-padding: 6 14; -fx-background-radius: 8;
+    -fx-border-color: #86efac; -fx-border-radius: 8; -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.card-btn-comments:hover {
+    -fx-background-color: #f0fdf4; -fx-border-color: #4ade80;
+}
+
+/* ============================================================
+   COMMENTS SECTION  (inside card, expandable)
+   ============================================================ */
+.comments-section {
+    -fx-background-color: #fafffe;
+    -fx-background-radius: 0 0 14 14;
+}
+
+.comments-section-title {
+    -fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #374151;
+}
+
+/* Comment bubble (inside a post card) */
+.comment-bubble {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 0 10 10 10;
+    -fx-border-color: #e2e8f0; -fx-border-radius: 0 10 10 10; -fx-border-width: 1;
+    -fx-padding: 10 14;
+}
+
+/* ── Add comment form inside card ── */
+.add-comment-form {
+    -fx-border-color: transparent transparent transparent #d1fae5;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 0 0 0 14;
+}
+.comment-input {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #d1fae5; -fx-border-radius: 8; -fx-border-width: 1.5;
+    -fx-padding: 8 12; -fx-font-size: 13; -fx-prompt-text-fill: #94a3b8;
+}
+.comment-input:focused {
+    -fx-border-color: #16a34a;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.12), 6, 0, 0, 0);
+}
+.card-btn-post-comment {
+    -fx-background-color: linear-gradient(to bottom, #22c55e, #16a34a);
+    -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold;
+    -fx-padding: 9 22; -fx-background-radius: 8; -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.3), 5, 0, 0, 2);
+}
+.card-btn-post-comment:hover {
+    -fx-background-color: linear-gradient(to bottom, #16a34a, #15803d);
+}
+
+/* ============================================================
+   COMMENT CARD  (in the Comments tab feed)
+   ============================================================ */
+.comment-card {
+    -fx-background-color: white;
+    -fx-background-radius: 0 12 12 12;
+    -fx-border-color: #e2e8f0; -fx-border-radius: 0 12 12 12; -fx-border-width: 1;
+    -fx-padding: 12 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.04), 6, 0, 0, 2);
+}
+.comment-card:hover {
+    -fx-border-color: #86efac;
+}
+.comment-author {
+    -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #15803d;
+}
+.comment-date { -fx-font-size: 11; -fx-text-fill: #94a3b8; }
+.comment-content { -fx-font-size: 13; -fx-text-fill: #374151; -fx-line-spacing: 2; }
+.comment-delete-btn {
+    -fx-background-color: transparent; -fx-text-fill: #cbd5e1;
+    -fx-font-size: 11; -fx-padding: 2 6; -fx-background-radius: 6; -fx-cursor: hand;
+}
+.comment-delete-btn:hover {
+    -fx-background-color: #fff1f2; -fx-text-fill: #dc2626;
+}
+
+/* ============================================================
+   WRITE FORM PANEL
+   ============================================================ */
+.write-form-panel {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #86efac; -fx-border-radius: 14; -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.15), 16, 0, 0, 4);
+}
+.write-form-title {
+    -fx-font-size: 17; -fx-font-weight: bold; -fx-text-fill: #15803d;
+}
+
+/* ============================================================
+   FIELD LABELS & TEXT INPUTS
+   ============================================================ */
+.field-label { -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151; }
+.text-input {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-border-color: #d1fae5; -fx-border-radius: 8; -fx-border-width: 1.5;
+    -fx-padding: 10 14; -fx-font-size: 13; -fx-prompt-text-fill: #94a3b8;
+}
+.text-input:focused {
+    -fx-border-color: #16a34a; -fx-background-color: white;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.15), 8, 0, 0, 0);
+}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn-new-post {
+    -fx-background-color: white; -fx-text-fill: #16a34a;
+    -fx-font-size: 13; -fx-font-weight: bold;
+    -fx-padding: 9 20; -fx-background-radius: 8;
+    -fx-border-color: white; -fx-border-radius: 8; -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 4, 0, 0, 1);
+}
+.btn-new-post:hover {
+    -fx-background-color: #f0fdf4; -fx-text-fill: #15803d;
+}
+
+.btn-refresh-icon {
+    -fx-background-color: rgba(255,255,255,0.22); -fx-text-fill: white;
+    -fx-font-size: 15; -fx-padding: 7 12; -fx-background-radius: 8;
+    -fx-border-color: rgba(255,255,255,0.30); -fx-border-radius: 8; -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.btn-refresh-icon:hover { -fx-background-color: rgba(255,255,255,0.35); }
+
+.btn-publish {
+    -fx-background-color: linear-gradient(to bottom, #22c55e, #16a34a);
+    -fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold;
+    -fx-padding: 10 28; -fx-background-radius: 8; -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.35), 6, 0, 0, 2);
+}
+.btn-publish:hover { -fx-background-color: linear-gradient(to bottom, #16a34a, #15803d); }
+.btn-publish:pressed { -fx-background-color: #166534; }
+
+.btn-clear {
+    -fx-background-color: white; -fx-text-fill: #64748b;
+    -fx-font-size: 13; -fx-font-weight: bold;
+    -fx-padding: 10 22; -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-border-width: 1.5;
+    -fx-cursor: hand;
+}
+.btn-clear:hover { -fx-background-color: #f8fafc; -fx-border-color: #94a3b8; }
+
+/* Post selector combo */
+.post-selector {
+    -fx-background-color: white; -fx-background-radius: 10;
+    -fx-border-color: #a7f3d0; -fx-border-radius: 10; -fx-border-width: 1.5;
+    -fx-padding: 6 14; -fx-font-size: 13;
+}
+.post-selector:focused {
+    -fx-border-color: #16a34a;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.18), 6, 0, 0, 0);
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+.scroll-bar:vertical { -fx-pref-width: 7; -fx-background-color: transparent; }
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #bbf7d0; -fx-background-radius: 4;
+}
+.scroll-bar:vertical .thumb:hover { -fx-background-color: #86efac; }
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button,
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button {
+    -fx-pref-width: 0; -fx-pref-height: 0; -fx-padding: 0;
+}
+
+/* ============================================================
+   TOOLTIP
+   ============================================================ */
+.tooltip {
+    -fx-background-color: #14532d; -fx-text-fill: white;
+    -fx-background-radius: 6; -fx-padding: 6 12; -fx-font-size: 12;
+}
+
+/* ============================================================
+   FILTER BANNER  (shown when a post filter is active)
+   ============================================================ */
+.filter-banner {
+    -fx-background-color: #fefce8;
+    -fx-background-radius: 8;
+    -fx-border-color: #fde047;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+}
+.filter-banner-text {
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-text-fill: #854d0e;
+}
+.filter-banner-link {
+    -fx-font-size: 13;
+    -fx-text-fill: #16a34a;
+    -fx-font-weight: bold;
+    -fx-border-color: transparent;
+}
+.filter-banner-link:hover {
+    -fx-text-fill: #15803d;
+    -fx-underline: true;
+}
+
+/* Clear filter button */
+.btn-clear-filter {
+    -fx-background-color: #fff7ed;
+    -fx-text-fill: #ea580c;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-padding: 9 16;
+    -fx-background-radius: 8;
+    -fx-border-color: #fed7aa;
+    -fx-border-radius: 8;
+    -fx-border-width: 1.5;
+    -fx-cursor: hand;
+}
+.btn-clear-filter:hover {
+    -fx-background-color: #ffedd5;
+    -fx-border-color: #fb923c;
+}
+.btn-clear-filter:pressed {
+    -fx-background-color: #fed7aa;
+}
+
+/* Green refresh button (for Comments tab toolbar) */
+.btn-refresh-green {
+    -fx-background-color: linear-gradient(to bottom, #22c55e, #16a34a);
+    -fx-text-fill: white;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-padding: 9 18;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.30), 5, 0, 0, 2);
+}
+.btn-refresh-green:hover {
+    -fx-background-color: linear-gradient(to bottom, #16a34a, #15803d);
+}
+.btn-refresh-green:pressed {
+    -fx-background-color: #166534;
+}
+
+/* Comment edit button */
+.comment-edit-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 11;
+    -fx-padding: 2 6;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+}
+.comment-edit-btn:hover {
+    -fx-background-color: #eff6ff;
+    -fx-text-fill: #2563eb;
+}
+
+/* Image upload buttons */
+.btn-choose-image {
+    -fx-background-color: #eff6ff;
+    -fx-text-fill: #2563eb;
+    -fx-font-size: 13;
+    -fx-font-weight: bold;
+    -fx-padding: 8 18;
+    -fx-background-radius: 8;
+    -fx-border-color: #bfdbfe;
+    -fx-border-radius: 8;
+    -fx-border-width: 1.5;
+    -fx-cursor: hand;
+}
+.btn-choose-image:hover {
+    -fx-background-color: #dbeafe;
+    -fx-border-color: #93c5fd;
+}
+
+.btn-remove-image {
+    -fx-background-color: #fff1f2;
+    -fx-text-fill: #dc2626;
+    -fx-font-size: 12;
+    -fx-padding: 6 14;
+    -fx-background-radius: 8;
+    -fx-border-color: #fecaca;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+.btn-remove-image:hover {
+    -fx-background-color: #fee2e2;
+}
+
+.image-preview-container {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 10;
+    -fx-border-color: #d1fae5;
+    -fx-border-radius: 10;
+    -fx-border-width: 2;
+    -fx-padding: 10;
+}
+
+/* Post image in card */
+.post-image {
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2);
+}
+
+/* ============================================================
+   FORM OVERLAY (modal-style with scrolling)
+   ============================================================ */
+.form-overlay-container {
+    -fx-background-color: rgba(0, 0, 0, 0.5);
+}
+
+.form-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.form-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.form-close-btn {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #dc2626;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-border-color: #fecaca;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+
+.form-close-btn:hover {
+    -fx-background-color: #fecaca;
+    -fx-text-fill: #b91c1c;
+}
+
+/* Compact image preview */
+.image-preview-container-compact {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 8;
+    -fx-border-color: #d1fae5;
+    -fx-border-radius: 8;
+    -fx-border-width: 1.5;
+    -fx-padding: 6;
+}
+
+/* Featured image in post cards - full width */
+.post-featured-image {
+    /* Image clipping handled in Java code */
+}
+
+/* Small remove button */
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #dc2626;
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10;
+    -fx-background-radius: 6;
+    -fx-border-color: #fecaca;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+
+.btn-remove-image-small:hover {
+    -fx-background-color: #fecaca;
+}
+
+/* Toggle preview button */
+.btn-toggle-preview {
+    -fx-background-color: #f0fdf4;
+    -fx-text-fill: #16a34a;
+    -fx-font-size: 12;
+    -fx-padding: 6 14;
+    -fx-background-radius: 6;
+    -fx-border-color: #bbf7d0;
+    -fx-border-radius: 6;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+    -fx-alignment: CENTER-LEFT;
+}
+
+.btn-toggle-preview:hover {
+    -fx-background-color: #dcfce7;
+    -fx-border-color: #86efac;
+}
