@@ -27,9 +27,12 @@
 | DB GUI | phpMyAdmin |
 | Auth | BCrypt password hashing |
 | Email | Gmail SMTP (JavaMail) |
+| SMS | SMSUtils (Twilio) |
 | AI / Biometrics | OpenCV + JavaCV (YuNet + SFace) |
+| AI / Chatbot | ChatbotService |
 | OAuth | Google OAuth 2.0 |
 | QR Code | ZXing |
+| Translation | TranslationUtils |
 | JSON | Gson |
 | Theme | AtlantaFX PrimerLight |
 
@@ -189,15 +192,54 @@ src/
 ├── main/
 │   ├── java/esprit/farouk/
 │   │   ├── Main.java
-│   │   ├── config/          # DatabaseConfig, OAuthConfig
-│   │   ├── controllers/     # LoginController, DashboardController, ProfileController...
-│   │   ├── models/          # User, Role, Farm, Field, Product, Order...
-│   │   ├── services/        # UserService, FarmService, ProductService...
-│   │   └── utils/           # ValidationUtils, EmailUtils, SessionManager, FaceUtils...
+│   │   ├── config/
+│   │   │   └── DatabaseConfig.java
+│   │   ├── controllers/
+│   │   │   ├── LoginController.java
+│   │   │   ├── RegisterController.java
+│   │   │   ├── ForgotPasswordController.java
+│   │   │   ├── DashboardController.java
+│   │   │   ├── UserManagementController.java
+│   │   │   ├── FarmController.java
+│   │   │   ├── MarketController.java
+│   │   │   ├── BlogController.java
+│   │   │   ├── EventController.java
+│   │   │   ├── FaceLoginController.java
+│   │   │   └── FaceEnrollmentController.java
+│   │   ├── database/
+│   │   │   └── DatabaseConnection.java
+│   │   ├── models/
+│   │   │   ├── User.java         ├── Role.java
+│   │   │   ├── Farm.java         ├── Field.java
+│   │   │   ├── Product.java      ├── Order.java
+│   │   │   ├── CartItem.java     ├── Post.java
+│   │   │   ├── Comment.java      ├── Event.java
+│   │   │   ├── Participation.java
+│   │   │   └── FaceEmbedding.java
+│   │   ├── services/
+│   │   │   ├── UserService.java        ├── RoleService.java
+│   │   │   ├── FarmService.java        ├── FieldService.java
+│   │   │   ├── ProductService.java     ├── OrderService.java
+│   │   │   ├── CartService.java        ├── PostService.java
+│   │   │   ├── CommentService.java     ├── EventService.java
+│   │   │   ├── ParticipationService.java
+│   │   │   ├── FaceRecognitionService.java
+│   │   │   └── ChatbotService.java
+│   │   └── utils/
+│   │       ├── ValidationUtils.java    ├── EmailUtils.java
+│   │       ├── SMSUtils.java           ├── QRCodeUtils.java
+│   │       ├── FaceUtils.java          ├── CameraUtils.java
+│   │       ├── TranslationUtils.java   ├── UIUtils.java
 │   └── resources/
-│       ├── fxml/            # login.fxml, dashboard.fxml, profile.fxml...
-│       ├── css/             # style.css
-│       └── models/          # ONNX face recognition models
+│       ├── fxml/
+│       │   ├── login.fxml          ├── register.fxml
+│       │   ├── forgot_password.fxml
+│       │   ├── dashboard.fxml
+│       │   ├── face_login.fxml
+│       │   └── face_enrollment.fxml
+│       ├── css/style.css
+│       └── images/
+└── uploads/
 ```
 
 ---
