@@ -39,7 +39,11 @@
       "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\ghada\\\\OneDrive\\\\Bureau\\\\agrticloud''; mvn clean compile -B 2>&1\")",
       "Bash(powershell.exe -Command \"Get-ChildItem ''C:\\\\Program Files'' -Directory -Filter ''*maven*'' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 5 -ExpandProperty FullName; Get-ChildItem ''C:\\\\Program Files'' -Directory -Filter ''*mvn*'' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 5 -ExpandProperty FullName\")",
       "Bash(powershell.exe -Command \"& ''C:\\\\Program Files\\\\JetBrains\\\\IntelliJ IDEA 2025.3.2\\\\plugins\\\\maven\\\\lib\\\\maven3\\\\bin\\\\mvn.cmd'' -f ''C:\\\\Users\\\\ghada\\\\OneDrive\\\\Bureau\\\\agrticloud\\\\pom.xml'' clean compile -B 2>&1\")",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(powershell:*)",
+      "Bash(cmd:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(powershell.exe:*)"
     ]
   }
 }
