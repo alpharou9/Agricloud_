@@ -16,33 +16,48 @@ import tn.esprit.services.ParticipationService;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
 import javafx.scene.shape.Circle;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.geometry.Pos;
+import tn.esprit.utils.email;
 import tn.esprit.utils.PdfGenerator;
 
 public class EventController {
 
-    @FXML private TextField titleF, locF, slotsF, nameF, emailF, phoneF, searchEventF, searchPartF;
-    @FXML private TextArea descF;
-    @FXML private DatePicker dateF;
-    @FXML private ComboBox<Event> eventDrop;
-    @FXML private ComboBox<String> statusDrop, sortEventCombo, filterStatusCombo;
+    @FXML
+    private TextField titleF, locF, slotsF, nameF, emailF, phoneF, searchEventF, searchPartF;
+    @FXML
+    private TextArea descF;
+    @FXML
+    private DatePicker dateF;
+    @FXML
+    private ComboBox<Event> eventDrop;
+    @FXML
+    private ComboBox<String> statusDrop, sortEventCombo, filterStatusCombo;
 
-    @FXML private TableView<Event> eventTab;
-    @FXML private TableColumn<Event, String> colT, colL, colD;
-    @FXML private TableColumn<Event, Integer> colSlo;
-    @FXML private TableColumn<Event, Timestamp> colDate;
+    @FXML
+    private TableView<Event> eventTab;
+    @FXML
+    private TableColumn<Event, String> colT, colL, colD;
+    @FXML
+    private TableColumn<Event, Integer> colSlo;
+    @FXML
+    private TableColumn<Event, Timestamp> colDate;
 
-    @FXML private TableView<Participation> partTab;
-    @FXML private TableColumn<Participation, String> colN, colE, colP, colS, colEventTitle;
+    @FXML
+    private TableView<Participation> partTab;
+    @FXML
+    private TableColumn<Participation, String> colN, colE, colP, colS, colEventTitle;
 
     // Chart Components
-    @FXML private PieChart statusPieChart;
-    @FXML private BarChart<String, Number> eventBarChart;
-    @FXML private CategoryAxis xAxis;
+    @FXML
+    private PieChart statusPieChart;
+    @FXML
+    private BarChart<String, Number> eventBarChart;
+    @FXML
+    private CategoryAxis xAxis;
 
     private EventService es = new EventService();
     private ParticipationService ps = new ParticipationService();
@@ -159,7 +174,6 @@ public class EventController {
 
     }
 
-    // --- CHART LOGIC ---
     @FXML
     public void refreshCharts() {
         // Pie Chart Update
@@ -193,7 +207,8 @@ public class EventController {
         });
         SortedList<Event> sortedEvents = new SortedList<>(filteredEvents);
         sortEventCombo.setOnAction(e -> {
-            if ("A-Z".equals(sortEventCombo.getValue())) sortedEvents.setComparator(Comparator.comparing(Event::getTitle));
+            if ("A-Z".equals(sortEventCombo.getValue()))
+                sortedEvents.setComparator(Comparator.comparing(Event::getTitle));
             else sortedEvents.setComparator(Comparator.comparing(Event::getTitle).reversed());
         });
         eventTab.setItems(sortedEvents);
@@ -226,13 +241,28 @@ public class EventController {
     }
 
     private boolean validateEventInput() {
-        if (titleF.getText().isEmpty() || dateF.getValue() == null) { showAlert("Title and Date required!"); return false; }
-        try { Integer.parseInt(slotsF.getText()); return true; } catch (NumberFormatException e) { showAlert("Slots must be a number!"); return false; }
+        if (titleF.getText().isEmpty() || dateF.getValue() == null) {
+            showAlert("Title and Date required!");
+            return false;
+        }
+        try {
+            Integer.parseInt(slotsF.getText());
+            return true;
+        } catch (NumberFormatException e) {
+            showAlert("Slots must be a number!");
+            return false;
+        }
     }
 
     private boolean validatePartInput() {
-        if (nameF.getText().isEmpty()) { showAlert("Participant Name required!"); return false; }
-        if (!Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$").matcher(emailF.getText()).matches()) { showAlert("Invalid Email!"); return false; }
+        if (nameF.getText().isEmpty()) {
+            showAlert("Participant Name required!");
+            return false;
+        }
+        if (!Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$").matcher(emailF.getText()).matches()) {
+            showAlert("Invalid Email!");
+            return false;
+        }
         return true;
     }
 
@@ -241,14 +271,19 @@ public class EventController {
         Participation selected = partTab.getSelectionModel().getSelectedItem();
 
         if (selected != null) {
-            // 1. Find the Event description from your master list using the event ID
-            // We look for the event that matches the one assigned to this participant
-            String eventDesc = masterEventData.stream()
+            // 1. Find the full Event object to get Location and Date
+            // (Assuming you have a list of events called 'es.getAll()')
+            tn.esprit.entities.Event event = es.getAll().stream()
                     .filter(e -> e.getId() == selected.getEventId())
-                    .map(Event::getDescription)
                     .findFirst()
-                    .orElse("No description available");
+                    .orElse(null);
 
+            if (event == null) {
+                showAlert("Error: Could not find event details.");
+                return;
+            }
+
+            // 2. Setup FileChooser
             javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
             fileChooser.setTitle("Save Ticket");
             fileChooser.setInitialFileName("Ticket_" + selected.getFullName().replace(" ", "_") + ".pdf");
@@ -257,32 +292,147 @@ public class EventController {
             java.io.File file = fileChooser.showSaveDialog(partTab.getScene().getWindow());
 
             if (file != null) {
-                // 2. Generate the file (Now passing the description for the QR code)
-                PdfGenerator.generateTicket(selected, selected.getEventTitle(), eventDesc, file.getAbsolutePath());
+                // 3. Prepare the Web API QR Code (Map Location)
+                String location = event.getLocation();
+                String date = event.getEventDate().toString();
 
-                // 3. Automatically open the file after saving
                 try {
+                    // Encode the location for Google Maps
+                    String mapUrl = "https://www.google.com/maps/search/?api=1&query=" +
+                            java.net.URLEncoder.encode(location, java.nio.charset.StandardCharsets.UTF_8);
+
+                    // Encode that Map URL for the QR API
+                    String qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" +
+                            java.net.URLEncoder.encode(mapUrl, java.nio.charset.StandardCharsets.UTF_8);
+
+                    // 4. Call your UPDATED PdfGenerator (the one that downloads the API image)
+                    PdfGenerator.generateTicket(selected, event.getTitle(), date, location, qrApiUrl, file.getAbsolutePath());
+
+                    // 5. Automatically open the file
                     if (java.awt.Desktop.isDesktopSupported()) {
                         java.awt.Desktop.getDesktop().open(file);
                     }
-                } catch (java.io.IOException e) {
-                    System.out.println("Could not open file automatically: " + e.getMessage());
-                }
 
-                new Alert(Alert.AlertType.INFORMATION, "Ticket saved successfully!").show();
+                    new Alert(Alert.AlertType.INFORMATION, "Ticket generated with API QR Code!").show();
+
+                } catch (Exception e) {
+                    System.out.println("Error generating ticket: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         } else {
             showAlert("Please select a participant first!");
         }
     }
 
-    private void showAlert(String msg) { new Alert(Alert.AlertType.ERROR, msg).show(); }
+    private void showAlert(String msg) {
+        new Alert(Alert.AlertType.ERROR, msg).show();
+    }
 
-    @FXML void addEvent() { if (validateEventInput()) { es.add(new Event(0, titleF.getText(), descF.getText(), locF.getText(), Timestamp.valueOf(dateF.getValue().atStartOfDay()), Integer.parseInt(slotsF.getText()))); refresh(); } }
-    @FXML void updateEvent() { Event s = eventTab.getSelectionModel().getSelectedItem(); if (s != null && validateEventInput()) { es.update(new Event(s.getId(), titleF.getText(), descF.getText(), locF.getText(), Timestamp.valueOf(dateF.getValue().atStartOfDay()), Integer.parseInt(slotsF.getText()))); refresh(); } }
-    @FXML void deleteEvent() { Event s = eventTab.getSelectionModel().getSelectedItem(); if (s != null) { es.delete(s.getId()); refresh(); } }
-    @FXML void addParticipation() { if (validatePartInput() && eventDrop.getValue() != null) { ps.add(new Participation(0, eventDrop.getValue().getId(), nameF.getText(), emailF.getText(), phoneF.getText(), statusDrop.getValue())); loadParticipations(eventDrop.getValue().getId()); } }
-    @FXML void updateParticipation() { Participation s = partTab.getSelectionModel().getSelectedItem(); if (s != null && validatePartInput()) { int evId = (eventDrop.getValue() != null) ? eventDrop.getValue().getId() : s.getEventId(); ps.update(new Participation(s.getId(), evId, nameF.getText(), emailF.getText(), phoneF.getText(), statusDrop.getValue())); loadParticipations(evId); } }
-    @FXML void deleteParticipation() { Participation s = partTab.getSelectionModel().getSelectedItem(); if (s != null) { ps.delete(s.getId()); loadParticipations(s.getEventId()); } }
-    @FXML void handleLogout() { System.exit(0); }
+    @FXML
+    void addEvent() {
+        if (validateEventInput()) {
+            es.add(new Event(0, titleF.getText(), descF.getText(), locF.getText(), Timestamp.valueOf(dateF.getValue().atStartOfDay()), Integer.parseInt(slotsF.getText())));
+            refresh();
+        }
+    }
+
+    @FXML
+    void updateEvent() {
+        Event s = eventTab.getSelectionModel().getSelectedItem();
+        if (s != null && validateEventInput()) {
+            es.update(new Event(s.getId(), titleF.getText(), descF.getText(), locF.getText(), Timestamp.valueOf(dateF.getValue().atStartOfDay()), Integer.parseInt(slotsF.getText())));
+            refresh();
+        }
+    }
+
+    @FXML
+    void deleteEvent() {
+        Event s = eventTab.getSelectionModel().getSelectedItem();
+        if (s != null) {
+            es.delete(s.getId());
+            refresh();
+        }
+    }
+
+    @FXML
+    void addParticipation() {
+        if (validatePartInput() && eventDrop.getValue() != null) {
+            String name = nameF.getText();
+            String emailAddr = emailF.getText();
+            String title = eventDrop.getValue().getTitle();
+            String loc = eventDrop.getValue().getLocation();
+            String date = eventDrop.getValue().getEventDate().toString();
+
+            // 1. Generate Google Maps Link & QR API Link
+            String mapUrl = "http://maps.google.com/?q=" + java.net.URLEncoder.encode(loc, java.nio.charset.StandardCharsets.UTF_8);
+            String qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" +
+                    java.net.URLEncoder.encode(mapUrl, java.nio.charset.StandardCharsets.UTF_8);
+
+            // 2. Save to DB
+            Participation p = new Participation(0, eventDrop.getValue().getId(), name, emailAddr, phoneF.getText(), statusDrop.getValue());
+            ps.add(p);
+
+            // 3. Generate PDF
+            String pdfPath = System.getProperty("user.home") + "/Desktop/Ticket_" + name.replace(" ", "_") + ".pdf";
+            PdfGenerator.generateTicket(p, title, date, loc, qrApiUrl, pdfPath);
+
+            // 4. Send Email
+            email mailService = new email();
+            mailService.sendEmailWithQR(emailAddr, "Ticket for " + title, name, title, date, loc, qrApiUrl);
+
+            loadParticipations(eventDrop.getValue().getId());
+        }
+    }
+
+    @FXML
+    void updateParticipation() {
+        Participation s = partTab.getSelectionModel().getSelectedItem();
+        if (s != null && validatePartInput()) {
+            int evId = (eventDrop.getValue() != null) ? eventDrop.getValue().getId() : s.getEventId();
+            ps.update(new Participation(s.getId(), evId, nameF.getText(), emailF.getText(), phoneF.getText(), statusDrop.getValue()));
+            loadParticipations(evId);
+        }
+    }
+
+    @FXML
+    void deleteParticipation() {
+        Participation s = partTab.getSelectionModel().getSelectedItem();
+        if (s != null) {
+            ps.delete(s.getId());
+            loadParticipations(s.getEventId());
+        }
+    }
+
+    @FXML
+    void handleLogout() {
+        System.exit(0);
+    }
+
+    @FXML
+    void goToUserEvents(javafx.event.ActionEvent event) {
+        try {
+            // 1. Load the user interface file
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/UserEvents.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            // 2. Get the current "Stage" (the window)
+            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+
+            // 3. Set the new scene
+            stage.setScene(new javafx.scene.Scene(root));
+            stage.setTitle("AgriCloud - User Events");
+            stage.show();
+
+        } catch (java.io.IOException e) {
+            System.out.println("Error switching to User View: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    void handleLogout(javafx.event.ActionEvent event) {
+        // Just a placeholder so the FXML doesn't crash
+        System.out.println("Logout clicked");
+    }
 }

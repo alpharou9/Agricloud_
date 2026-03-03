@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane prefHeight="850.0" prefWidth="1550.0" style="-fx-background-color: #f0f4f0;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tn.esprit.controllers.UserEventController">
+    <left>
+        <VBox prefWidth="240.0" spacing="10" style="-fx-background-color: #27ae60;">
+            <padding><Insets bottom="25" left="20" right="20" top="25" /></padding>
+            <Label text="AgriCloud" textFill="WHITE" style="-fx-font-size: 20px; -fx-font-weight: bold;">
+                <VBox.margin><Insets bottom="40.0" /></VBox.margin>
+            </Label>
+
+            <Button maxWidth="Infinity" onAction="#backToAdmin" prefHeight="40.0"
+                    style="-fx-background-color: transparent; -fx-text-fill: #bdc3c7; -fx-alignment: center-left; -fx-cursor: hand;" text="📊 Dashboard" />
+
+            <Button maxWidth="Infinity" prefHeight="40.0"
+                    style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-alignment: center-left; -fx-font-weight: bold;" text="🎫 Events View" />
+
+            <Region VBox.vgrow="ALWAYS" />
+            <Separator opacity="0.1" />
+            <Button maxWidth="Infinity" onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Logout" />
+        </VBox>
+    </left>
+
+    <center>
+        <AnchorPane>
+            <children>
+                <VBox prefHeight="140.0" spacing="15" style="-fx-background-color: #27ae60;"
+                      AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+                    <padding><Insets left="30" right="30" top="20"/></padding>
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="20">
+                            <VBox>
+                                <Label text="Available Workshops" textFill="WHITE" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+                                <Label text="Join our community of eco-friendly farmers" textFill="#e0e0e0" />
+                            </VBox>
+                            <Region HBox.hgrow="ALWAYS" />
+                            <HBox spacing="10" alignment="CENTER_RIGHT">
+                                <TextField fx:id="searchEventF" prefWidth="250" promptText="🔍 Search events..."
+                                           style="-fx-background-radius: 20; -fx-padding: 8 15;" />
+                                <ComboBox fx:id="sortCombo" prefWidth="150" promptText="Sort By"
+                                          style="-fx-background-radius: 20;" />
+                            </HBox>
+                        </HBox>
+                    </children>
+                </VBox>
+
+                <ScrollPane fitToWidth="true" layoutY="140.0" style="-fx-background-color: transparent;"
+                            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="140.0">
+                    <content>
+                        <FlowPane fx:id="eventGrid" hgap="25.0" vgap="25.0" style="-fx-padding: 30;" />
+                    </content>
+                </ScrollPane>
+
+                <StackPane fx:id="bookingModal" visible="false" style="-fx-background-color: rgba(0,0,0,0.7);" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <VBox maxHeight="450.0" maxWidth="400.0" spacing="15.0" style="-fx-background-color: white; -fx-background-radius: 20; -fx-padding: 30; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 0);">
+                        <children>
+                            <Label fx:id="modalTitle" text="Confirm Registration" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #27ae60;" />
+                            <Separator />
+                            <TextField fx:id="userNameF" promptText="Full Name" style="-fx-pref-height: 40; -fx-background-radius: 5;" />
+                            <TextField fx:id="userEmailF" promptText="Email Address" style="-fx-pref-height: 40; -fx-background-radius: 5;" />
+                            <TextField fx:id="userPhoneF" promptText="Phone Number" style="-fx-pref-height: 40; -fx-background-radius: 5;" />
+
+                            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                                <children>
+                                    <Button onAction="#closeModal" text="Cancel" style="-fx-background-color: #eee; -fx-cursor: hand;" />
+                                    <Button onAction="#submitBooking" text="Confirm &amp; Join" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;" />
+                                </children>
+                                <VBox.margin><Insets top="10.0" /></VBox.margin>
+                            </HBox>
+                        </children>
+                    </VBox>
+                </StackPane>
+
+            </children>
+        </AnchorPane>
+    </center>
+</BorderPane>

@@ -6,13 +6,22 @@
 
 <BorderPane prefHeight="850.0" prefWidth="1550.0" style="-fx-background-color: #f0f4f0;" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="tn.esprit.controllers.EventController">
     <left>
-        <VBox prefWidth="240.0" spacing="15" style="-fx-background-color: #27ae60;">
+        <VBox prefWidth="240.0" spacing="10" style="-fx-background-color: #27ae60;">
             <padding><Insets bottom="25" left="20" right="20" top="25" /></padding>
-            <Label style="-fx-text-fill: white; -fx-font-size: 26; -fx-font-weight: bold;" text="AgriCloud" />
-            <Separator opacity="0.3" />
-            <Button maxWidth="Infinity" style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold;" text="Dashboard" />
+
+            <Label text="AgriCloud Admin" textFill="WHITE" style="-fx-font-size: 20px; -fx-font-weight: bold;">
+                <VBox.margin><Insets bottom="40.0" /></VBox.margin>
+            </Label>
+
+            <Button maxWidth="Infinity" prefHeight="40.0"
+                    style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-alignment: center-left; -fx-font-weight: bold;" text="📊 Dashboard" />
+
+            <Button maxWidth="Infinity" onAction="#goToUserEvents" prefHeight="40.0"
+                    style="-fx-background-color: transparent; -fx-text-fill: #bdc3c7; -fx-alignment: center-left; -fx-cursor: hand;" text="🎫 Events View"/>
+
             <Region VBox.vgrow="ALWAYS" />
-            <Button maxWidth="Infinity" onAction="#handleLogout" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Logout" />
+            <Separator opacity="0.1" />
+            <Button maxWidth="Infinity" onAction="#handleLogout" style="-fx-background-color: #2ecc71; -fx-text-fill: white;" text="Logout" />
         </VBox>
     </left>
     <center>
