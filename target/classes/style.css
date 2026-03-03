@@ -1078,3 +1078,12 @@
 .default-color3.chart-pie { -fx-pie-color: #9C27B0; }
 .default-color4.chart-pie { -fx-pie-color: #00BCD4; }
 .default-color5.chart-pie { -fx-pie-color: #E53935; }
+
+/* ---------- WEATHER STRIP ---------- */
+.weather-strip {
+    -fx-text-fill: -agri-text-muted;
+    -fx-font-size: 12px;
+    -fx-padding: 4 10 4 10;
+    -fx-background-color: -agri-green-bg;
+    -fx-background-radius: 12;
+}
