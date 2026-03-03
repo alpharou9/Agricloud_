@@ -1,170 +1,254 @@
 package org.example.service;
 
+import org.example.dao.DatabaseConnection;
 import org.example.dao.OrderDAO;
+import org.example.dao.OrderDetailDAO;
 import org.example.model.Order;
+import org.example.model.OrderDetail;
 import org.example.model.Product;
 import org.example.model.User;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
 /**
  * Business-logic layer for the Orders module.
  *
- * Dependency direction: OrderService → ProductService (for stock checks/updates).
- * ProductService has NO knowledge of orders (one-way dependency).
+ * Dependency direction:  OrderService → ProductService (stock)
+ *                        ProductService has NO knowledge of orders.
  *
- * Responsibilities:
- *  - Enforce role rules: only farmers can place orders.
- *  - Validate stock before creating an order.
- *  - Decrement stock on order creation; restore it on cancellation.
- *  - Adjust stock when an order's quantity is edited.
+ * All multi-step DB operations (create / update / delete) run inside a
+ * single JDBC transaction so partial writes never happen.
  */
 public class OrderService {
 
-    private final OrderDAO orderDAO = new OrderDAO();
-    // Orders depend on Products – one-way
+    private final OrderDAO       orderDAO       = new OrderDAO();
+    private final OrderDetailDAO detailDAO      = new OrderDetailDAO();
     private final ProductService productService = new ProductService();
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // Create
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     /**
-     * Creates a new order for a farmer.
-     * Validates that the target product is approved and has sufficient stock,
-     * then decrements stock atomically after persisting the order.
+     * Saves a new multi-product order.
+     * 1. Validates each item (product exists, approved, sufficient stock).
+     * 2. Inserts the order header.
+     * 3. Inserts all detail rows in a batch.
+     * 4. Decrements stock for every product.
+     * Everything runs in one transaction; any failure rolls back completely.
      */
-    public void createOrder(Order order, User requester) throws Exception {
+    public void createOrder(Order order, List<OrderDetail> details, User requester)
+            throws Exception {
         if (requester.getRole() != User.Role.FARMER) {
             throw new SecurityException("Only farmers can place orders.");
         }
+        if (details == null || details.isEmpty()) {
+            throw new Exception("Please add at least one product to the order.");
+        }
 
-        Product product = productService.getProductById(order.getProductId());
-        if (product == null) {
-            throw new Exception("Selected product does not exist.");
-        }
-        if (!"approved".equals(product.getStatus())) {
-            throw new Exception("You can only order approved products. " +
-                                "This product is currently '" + product.getStatus() + "'.");
-        }
-        if (product.getQuantity() < order.getQuantity()) {
-            throw new Exception("Insufficient stock. Available: " +
-                                product.getQuantity() + " " + product.getUnit() +
-                                ", requested: " + order.getQuantity() + ".");
+        // Validate & price each item
+        double total = 0;
+        for (OrderDetail d : details) {
+            Product p = productService.getProductById(d.getProductId());
+            if (p == null) throw new Exception("Product not found (id=" + d.getProductId() + ").");
+            if (!"approved".equals(p.getStatus()))
+                throw new Exception("'" + p.getName() + "' is not available for ordering.");
+            if (p.getQuantity() < d.getQuantity())
+                throw new Exception("Insufficient stock for '" + p.getName() +
+                        "'. Available: " + p.getQuantity() + ", requested: " + d.getQuantity() + ".");
+            d.setUnitPrice(p.getPrice());
+            d.setSubtotal(p.getPrice() * d.getQuantity());
+            total += d.getSubtotal();
         }
 
         order.setCustomerId(requester.getId());
-        order.setSellerId(product.getUserId());
-        order.setUnitPrice(product.getPrice());
-        order.setTotalPrice(product.getPrice() * order.getQuantity());
+        order.setTotalPrice(total);
         order.setStatus("pending");
 
-        orderDAO.insert(order);
-
-        // Decrement stock AFTER the order row is committed
-        productService.decrementStock(order.getProductId(), order.getQuantity());
+        Connection conn = DatabaseConnection.getConnection();
+        conn.setAutoCommit(false);
+        try {
+            orderDAO.insert(order);                          // sets order.id
+            detailDAO.insertAll(order.getId(), details);
+            for (OrderDetail d : details) {
+                productService.decrementStock(d.getProductId(), d.getQuantity());
+            }
+            conn.commit();
+        } catch (Exception e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+        }
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // Update
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
     /**
-     * Updates an existing order. When the quantity or product changes, stock is
-     * adjusted: the old quantity is restored first, then the new quantity is
-     * consumed from the (potentially different) product.
-     *
-     * @param updated      new order data (id must match an existing row)
-     * @param previous     snapshot of the order BEFORE editing (loaded by the controller)
+     * Replaces the items of an existing order and recalculates the total.
+     * Stock for the old items is restored first, then consumed by the new items.
+     * Only the order owner (farmer) or an admin may call this.
      */
-    public void updateOrder(Order updated, Order previous, User requester) throws Exception {
+    public void updateOrder(Order order, List<OrderDetail> newDetails, User requester)
+            throws Exception {
+        Order existing = orderDAO.getById(order.getId());
+        if (existing == null) throw new Exception("Order not found.");
         if (requester.getRole() == User.Role.FARMER &&
-                previous.getCustomerId() != requester.getId()) {
+                existing.getCustomerId() != requester.getId()) {
             throw new SecurityException("Farmers can only edit their own orders.");
         }
-
-        boolean productChanged = updated.getProductId() != previous.getProductId();
-        boolean qtyChanged     = updated.getQuantity()  != previous.getQuantity();
-
-        if (productChanged) {
-            // Restore stock to previous product, then consume from new product
-            if (!"cancelled".equals(previous.getStatus()) &&
-                !"delivered".equals(previous.getStatus())) {
-                productService.incrementStock(previous.getProductId(), previous.getQuantity());
-            }
-            Product newProduct = productService.getProductById(updated.getProductId());
-            if (newProduct == null) throw new Exception("New product not found.");
-            if (!"approved".equals(newProduct.getStatus())) {
-                throw new Exception("Cannot switch to a non-approved product.");
-            }
-            productService.decrementStock(updated.getProductId(), updated.getQuantity());
-            updated.setSellerId(newProduct.getUserId());
-            updated.setUnitPrice(newProduct.getPrice());
-            updated.setTotalPrice(newProduct.getPrice() * updated.getQuantity());
-        } else if (qtyChanged &&
-                   !"cancelled".equals(previous.getStatus()) &&
-                   !"delivered".equals(previous.getStatus())) {
-            int diff = updated.getQuantity() - previous.getQuantity();
-            if (diff > 0) {
-                productService.decrementStock(updated.getProductId(), diff);
-            } else {
-                productService.incrementStock(updated.getProductId(), -diff);
-            }
-            updated.setTotalPrice(updated.getUnitPrice() * updated.getQuantity());
+        if (newDetails == null || newDetails.isEmpty()) {
+            throw new Exception("An order must have at least one product.");
         }
 
-        orderDAO.update(updated);
+        // Validate & price new items
+        double total = 0;
+        for (OrderDetail d : newDetails) {
+            Product p = productService.getProductById(d.getProductId());
+            if (p == null) throw new Exception("Product not found (id=" + d.getProductId() + ").");
+            d.setUnitPrice(p.getPrice());
+            d.setSubtotal(p.getPrice() * d.getQuantity());
+            total += d.getSubtotal();
+        }
+
+        List<OrderDetail> oldDetails = detailDAO.getByOrderId(order.getId());
+
+        Connection conn = DatabaseConnection.getConnection();
+        conn.setAutoCommit(false);
+        try {
+            // 1. Restore stock for old items (if order is still active)
+            boolean active = !("cancelled".equals(existing.getStatus()) ||
+                               "delivered".equals(existing.getStatus()));
+            if (active) {
+                for (OrderDetail old : oldDetails) {
+                    productService.incrementStock(old.getProductId(), old.getQuantity());
+                }
+            }
+            // 2. Delete old detail rows and insert new ones
+            detailDAO.deleteByOrderId(order.getId());
+            detailDAO.insertAll(order.getId(), newDetails);
+            // 3. Decrement stock for new items
+            if (active) {
+                for (OrderDetail d : newDetails) {
+                    productService.decrementStock(d.getProductId(), d.getQuantity());
+                }
+            }
+            // 4. Update order header
+            order.setTotalPrice(total);
+            orderDAO.update(order);
+            conn.commit();
+        } catch (Exception e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+        }
     }
 
-    // -------------------------------------------------------------------------
-    // Cancel / Delete
-    // -------------------------------------------------------------------------
-
     /**
-     * Cancels an order and restores its stock (unless already delivered/cancelled).
+     * Updates only the order status.
+     * If transitioning TO 'cancelled', stock is restored.
+     * If transitioning FROM 'cancelled' to an active status, stock is NOT re-consumed
+     * (admin responsibility to verify availability first).
      */
+    public void updateOrderStatus(long orderId, String newStatus, User requester)
+            throws Exception {
+        Order order = orderDAO.getById(orderId);
+        if (order == null) throw new Exception("Order not found.");
+
+        boolean wasFinal = "cancelled".equals(order.getStatus()) ||
+                           "delivered".equals(order.getStatus());
+
+        if ("cancelled".equals(newStatus) && !wasFinal) {
+            List<OrderDetail> details = detailDAO.getByOrderId(orderId);
+            for (OrderDetail d : details) {
+                productService.incrementStock(d.getProductId(), d.getQuantity());
+            }
+        }
+
+        order.setStatus(newStatus);
+        orderDAO.update(order);
+    }
+
+    // =========================================================================
+    // Cancel / Delete
+    // =========================================================================
+
+    /** Cancels an order and restores stock (unless already delivered/cancelled). */
     public void cancelOrder(long orderId, User requester) throws Exception {
         Order order = orderDAO.getById(orderId);
-        if (order == null) throw new Exception("Order not found: id=" + orderId);
+        if (order == null) throw new Exception("Order not found.");
         if (requester.getRole() == User.Role.FARMER &&
                 order.getCustomerId() != requester.getId()) {
             throw new SecurityException("Farmers can only cancel their own orders.");
         }
-
-        boolean alreadyFinal = "cancelled".equals(order.getStatus()) ||
-                               "delivered".equals(order.getStatus());
-        if (!alreadyFinal) {
-            productService.incrementStock(order.getProductId(), order.getQuantity());
-        }
-
-        order.setStatus("cancelled");
-        orderDAO.update(order);
+        updateOrderStatus(orderId, "cancelled", requester);
     }
 
-    /**
-     * Hard-deletes an order row. Does NOT restore stock (use cancelOrder for that).
-     * Only admins should invoke this.
-     */
+    /** Hard-deletes an order (admin only). Restores stock if the order was still active. */
     public void deleteOrder(long orderId, User requester) throws Exception {
         if (requester.getRole() != User.Role.ADMIN) {
             throw new SecurityException("Only admins can permanently delete orders.");
         }
-        orderDAO.delete(orderId);
+        Order order = orderDAO.getById(orderId);
+        if (order == null) return;
+
+        boolean active = !("cancelled".equals(order.getStatus()) ||
+                           "delivered".equals(order.getStatus()));
+        Connection conn = DatabaseConnection.getConnection();
+        conn.setAutoCommit(false);
+        try {
+            if (active) {
+                List<OrderDetail> details = detailDAO.getByOrderId(orderId);
+                for (OrderDetail d : details) {
+                    productService.incrementStock(d.getProductId(), d.getQuantity());
+                }
+            }
+            orderDAO.delete(orderId);   // CASCADE deletes order_details rows
+            conn.commit();
+        } catch (Exception e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+        }
     }
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // Queries
-    // -------------------------------------------------------------------------
+    // =========================================================================
 
-    /** All orders – admin view. */
-    public List<Order> getAllOrders() throws SQLException {
-        return orderDAO.getAll();
-    }
+    public List<Order> getAllOrders() throws SQLException { return orderDAO.getAll(); }
 
-    /** Orders placed by a specific farmer – farmer view. */
     public List<Order> getFarmerOrders(long farmerId) throws SQLException {
         return orderDAO.getByCustomerId(farmerId);
+    }
+
+    // ── Paginated ──────────────────────────────────────────────────────────
+
+    public List<Order> getAllOrdersPage(int pageSize, int offset) throws SQLException {
+        return orderDAO.getPage(pageSize, offset);
+    }
+
+    public List<Order> getFarmerOrdersPage(long farmerId, int pageSize, int offset)
+            throws SQLException {
+        return orderDAO.getPageByCustomer(farmerId, pageSize, offset);
+    }
+
+    public int countAllOrders() throws SQLException    { return orderDAO.countAll(); }
+
+    public int countFarmerOrders(long farmerId) throws SQLException {
+        return orderDAO.countByCustomer(farmerId);
+    }
+
+    // ── Detail / stats ─────────────────────────────────────────────────────
+
+    public List<OrderDetail> getOrderDetails(long orderId) throws SQLException {
+        return detailDAO.getByOrderId(orderId);
     }
 
     public int getActiveOrderCount() throws SQLException {
@@ -173,24 +257,5 @@ public class OrderService {
 
     public double getTotalRevenue() throws SQLException {
         return orderDAO.getTotalRevenue();
-    }
-
-    /**
-     * Updates only the status of an existing order — no stock adjustment.
-     * Used by admins when moving an order through workflow stages
-     * (confirmed → processing → shipped → delivered) without changing product or quantity.
-     */
-    public void updateOrderStatus(long orderId, String newStatus, User requester) throws Exception {
-        Order order = orderDAO.getById(orderId);
-        if (order == null) throw new Exception("Order not found: id=" + orderId);
-
-        // Cancelling via this method restores stock (same rule as cancelOrder)
-        if ("cancelled".equals(newStatus) &&
-            !("cancelled".equals(order.getStatus()) || "delivered".equals(order.getStatus()))) {
-            productService.incrementStock(order.getProductId(), order.getQuantity());
-        }
-
-        order.setStatus(newStatus);
-        orderDAO.update(order);
     }
 }

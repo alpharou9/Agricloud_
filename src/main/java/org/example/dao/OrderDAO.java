@@ -9,24 +9,80 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * JDBC access layer for the orders table.
- * This class only stores/retrieves order rows; it does NOT touch the products
- * table (stock management is the responsibility of ProductService).
+ * JDBC access layer for the orders header table.
+ * Line items live in OrderDetailDAO / order_details.
  */
 public class OrderDAO {
 
     // -------------------------------------------------------------------------
-    // Read
+    // Paginated reads
+    // -------------------------------------------------------------------------
+
+    /** All orders – admin view, newest first, server-side paged. */
+    public List<Order> getPage(int pageSize, int offset) throws SQLException {
+        List<Order> list = new ArrayList<>();
+        String sql = "SELECT * FROM orders ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
+            ps.setInt(1, pageSize);
+            ps.setInt(2, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        }
+        return list;
+    }
+
+    /** Orders for a specific customer, newest first, server-side paged. */
+    public List<Order> getPageByCustomer(long customerId, int pageSize, int offset)
+            throws SQLException {
+        List<Order> list = new ArrayList<>();
+        String sql = """
+            SELECT * FROM orders
+             WHERE customer_id = ?
+             ORDER BY created_at DESC
+             LIMIT ? OFFSET ?
+            """;
+        try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
+            ps.setLong(1, customerId);
+            ps.setInt(2, pageSize);
+            ps.setInt(3, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        }
+        return list;
+    }
+
+    // -------------------------------------------------------------------------
+    // Count helpers (for pagination controls)
+    // -------------------------------------------------------------------------
+
+    public int countAll() throws SQLException {
+        try (Statement st = DatabaseConnection.getConnection().createStatement();
+             ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM orders")) {
+            if (rs.next()) return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    public int countByCustomer(long customerId) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM orders WHERE customer_id = ?";
+        try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
+            ps.setLong(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    // -------------------------------------------------------------------------
+    // Full list (non-paginated – used by DashboardController stats)
     // -------------------------------------------------------------------------
 
     public List<Order> getAll() throws SQLException {
         List<Order> list = new ArrayList<>();
-        String sql = """
-            SELECT o.*, p.name AS product_name
-              FROM orders o
-              LEFT JOIN products p ON o.product_id = p.id
-             ORDER BY o.created_at DESC
-            """;
+        String sql = "SELECT * FROM orders ORDER BY created_at DESC";
         try (Statement st = DatabaseConnection.getConnection().createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) list.add(map(rs));
@@ -36,13 +92,7 @@ public class OrderDAO {
 
     public List<Order> getByCustomerId(long customerId) throws SQLException {
         List<Order> list = new ArrayList<>();
-        String sql = """
-            SELECT o.*, p.name AS product_name
-              FROM orders o
-              LEFT JOIN products p ON o.product_id = p.id
-             WHERE o.customer_id = ?
-             ORDER BY o.created_at DESC
-            """;
+        String sql = "SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC";
         try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
             ps.setLong(1, customerId);
             try (ResultSet rs = ps.executeQuery()) {
@@ -53,12 +103,7 @@ public class OrderDAO {
     }
 
     public Order getById(long id) throws SQLException {
-        String sql = """
-            SELECT o.*, p.name AS product_name
-              FROM orders o
-              LEFT JOIN products p ON o.product_id = p.id
-             WHERE o.id = ?
-            """;
+        String sql = "SELECT * FROM orders WHERE id = ?";
         try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -67,6 +112,10 @@ public class OrderDAO {
         }
         return null;
     }
+
+    // -------------------------------------------------------------------------
+    // Dashboard stats
+    // -------------------------------------------------------------------------
 
     public int getActiveOrderCount() throws SQLException {
         String sql = "SELECT COUNT(*) FROM orders WHERE status NOT IN ('delivered','cancelled')";
@@ -78,7 +127,7 @@ public class OrderDAO {
     }
 
     public double getTotalRevenue() throws SQLException {
-        String sql = "SELECT COALESCE(SUM(total_price),0) FROM orders WHERE status = 'delivered'";
+        String sql = "SELECT COALESCE(SUM(total_price),0) FROM orders WHERE status='delivered'";
         try (Statement st = DatabaseConnection.getConnection().createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             if (rs.next()) return rs.getDouble(1);
@@ -93,27 +142,23 @@ public class OrderDAO {
     public void insert(Order o) throws SQLException {
         String sql = """
             INSERT INTO orders
-                (customer_id, product_id, seller_id, quantity, unit_price, total_price,
-                 status, shipping_address, shipping_city, shipping_postal, notes, delivery_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (customer_id, total_price, status,
+                 shipping_address, shipping_city, shipping_postal, notes, delivery_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """;
         try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(
                 sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setLong(1, o.getCustomerId());
-            ps.setLong(2, o.getProductId());
-            ps.setLong(3, o.getSellerId());
-            ps.setInt(4, o.getQuantity());
-            ps.setDouble(5, o.getUnitPrice());
-            ps.setDouble(6, o.getTotalPrice());
-            ps.setString(7, o.getStatus());
-            ps.setString(8, o.getShippingAddress());
-            ps.setString(9, o.getShippingCity());
-            ps.setString(10, o.getShippingPostal());
-            ps.setString(11, o.getNotes());
+            ps.setDouble(2, o.getTotalPrice());
+            ps.setString(3, o.getStatus());
+            ps.setString(4, o.getShippingAddress());
+            ps.setString(5, o.getShippingCity());
+            ps.setString(6, o.getShippingPostal());
+            ps.setString(7, o.getNotes());
             if (o.getDeliveryDate() != null)
-                ps.setDate(12, Date.valueOf(o.getDeliveryDate()));
+                ps.setDate(8, Date.valueOf(o.getDeliveryDate()));
             else
-                ps.setNull(12, Types.DATE);
+                ps.setNull(8, Types.DATE);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) o.setId(keys.getLong(1));
@@ -124,26 +169,23 @@ public class OrderDAO {
     public void update(Order o) throws SQLException {
         String sql = """
             UPDATE orders
-               SET product_id=?, quantity=?, unit_price=?, total_price=?, status=?,
-                   shipping_address=?, shipping_city=?, shipping_postal=?, notes=?,
-                   delivery_date=?, updated_at=NOW()
+               SET total_price=?, status=?,
+                   shipping_address=?, shipping_city=?, shipping_postal=?,
+                   notes=?, delivery_date=?, updated_at=NOW()
              WHERE id=?
             """;
         try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
-            ps.setLong(1, o.getProductId());
-            ps.setInt(2, o.getQuantity());
-            ps.setDouble(3, o.getUnitPrice());
-            ps.setDouble(4, o.getTotalPrice());
-            ps.setString(5, o.getStatus());
-            ps.setString(6, o.getShippingAddress());
-            ps.setString(7, o.getShippingCity());
-            ps.setString(8, o.getShippingPostal());
-            ps.setString(9, o.getNotes());
+            ps.setDouble(1, o.getTotalPrice());
+            ps.setString(2, o.getStatus());
+            ps.setString(3, o.getShippingAddress());
+            ps.setString(4, o.getShippingCity());
+            ps.setString(5, o.getShippingPostal());
+            ps.setString(6, o.getNotes());
             if (o.getDeliveryDate() != null)
-                ps.setDate(10, Date.valueOf(o.getDeliveryDate()));
+                ps.setDate(7, Date.valueOf(o.getDeliveryDate()));
             else
-                ps.setNull(10, Types.DATE);
-            ps.setLong(11, o.getId());
+                ps.setNull(7, Types.DATE);
+            ps.setLong(8, o.getId());
             ps.executeUpdate();
         }
     }
@@ -164,11 +206,6 @@ public class OrderDAO {
         Order o = new Order();
         o.setId(rs.getLong("id"));
         o.setCustomerId(rs.getLong("customer_id"));
-        o.setProductId(rs.getLong("product_id"));
-        o.setSellerId(rs.getLong("seller_id"));
-        o.setProductName(rs.getString("product_name"));
-        o.setQuantity(rs.getInt("quantity"));
-        o.setUnitPrice(rs.getDouble("unit_price"));
         o.setTotalPrice(rs.getDouble("total_price"));
         o.setStatus(rs.getString("status"));
         o.setShippingAddress(rs.getString("shipping_address"));

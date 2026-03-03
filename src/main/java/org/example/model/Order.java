@@ -2,87 +2,79 @@ package org.example.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
- * Order entity – belongs to the Orders module (frontend / customer side).
- * References a product by ID; stock is managed through ProductService, not here.
+ * Order header – one row in the orders table.
+ * Individual line items live in OrderDetail (order_details table).
  */
 public class Order {
 
-    private long id;
-    private long customerId;    // farmer who placed the order
-    private long productId;
-    private long sellerId;
-    private String productName; // denormalized for display only
-    private int quantity;
-    private double unitPrice;
-    private double totalPrice;
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("MMM dd, yyyy");
+
+    private long          id;
+    private long          customerId;
+    private double        totalPrice;
     /** pending | confirmed | processing | shipped | delivered | cancelled */
-    private String status;
-    private String shippingAddress;
-    private String shippingCity;
-    private String shippingPostal;
-    private String notes;
+    private String        status;
+    private String        shippingAddress;
+    private String        shippingCity;
+    private String        shippingPostal;
+    private String        notes;
     private LocalDateTime orderDate;
-    private LocalDate deliveryDate;
+    private LocalDate     deliveryDate;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public Order() {}
 
-    public long getId() { return id; }
-    public void setId(long id) { this.id = id; }
+    // ── Getters / Setters ──────────────────────────────────────────────────
 
-    public long getCustomerId() { return customerId; }
-    public void setCustomerId(long customerId) { this.customerId = customerId; }
+    public long getId()                          { return id; }
+    public void setId(long id)                   { this.id = id; }
 
-    public long getProductId() { return productId; }
-    public void setProductId(long productId) { this.productId = productId; }
+    public long getCustomerId()                  { return customerId; }
+    public void setCustomerId(long cid)          { this.customerId = cid; }
 
-    public long getSellerId() { return sellerId; }
-    public void setSellerId(long sellerId) { this.sellerId = sellerId; }
+    public double getTotalPrice()                { return totalPrice; }
+    public void setTotalPrice(double tp)         { this.totalPrice = tp; }
 
-    public String getProductName() { return productName; }
-    public void setProductName(String productName) { this.productName = productName; }
+    public String getStatus()                    { return status; }
+    public void setStatus(String status)         { this.status = status; }
 
-    public int getQuantity() { return quantity; }
-    public void setQuantity(int quantity) { this.quantity = quantity; }
+    public String getShippingAddress()           { return shippingAddress; }
+    public void setShippingAddress(String a)     { this.shippingAddress = a; }
 
-    public double getUnitPrice() { return unitPrice; }
-    public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
+    public String getShippingCity()              { return shippingCity; }
+    public void setShippingCity(String c)        { this.shippingCity = c; }
 
-    public double getTotalPrice() { return totalPrice; }
-    public void setTotalPrice(double totalPrice) { this.totalPrice = totalPrice; }
+    public String getShippingPostal()            { return shippingPostal; }
+    public void setShippingPostal(String p)      { this.shippingPostal = p; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getNotes()                     { return notes; }
+    public void setNotes(String notes)           { this.notes = notes; }
 
-    public String getShippingAddress() { return shippingAddress; }
-    public void setShippingAddress(String shippingAddress) { this.shippingAddress = shippingAddress; }
+    public LocalDateTime getOrderDate()          { return orderDate; }
+    public void setOrderDate(LocalDateTime od)   { this.orderDate = od; }
 
-    public String getShippingCity() { return shippingCity; }
-    public void setShippingCity(String shippingCity) { this.shippingCity = shippingCity; }
+    public LocalDate getDeliveryDate()           { return deliveryDate; }
+    public void setDeliveryDate(LocalDate dd)    { this.deliveryDate = dd; }
 
-    public String getShippingPostal() { return shippingPostal; }
-    public void setShippingPostal(String shippingPostal) { this.shippingPostal = shippingPostal; }
+    public LocalDateTime getCreatedAt()          { return createdAt; }
+    public void setCreatedAt(LocalDateTime ca)   { this.createdAt = ca; }
 
-    public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
+    public LocalDateTime getUpdatedAt()          { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime ua)   { this.updatedAt = ua; }
 
-    public LocalDateTime getOrderDate() { return orderDate; }
-    public void setOrderDate(LocalDateTime orderDate) { this.orderDate = orderDate; }
-
-    public LocalDate getDeliveryDate() { return deliveryDate; }
-    public void setDeliveryDate(LocalDate deliveryDate) { this.deliveryDate = deliveryDate; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    /** Formatted order date for display (e.g. "Mar 01, 2026"). */
+    public String getFormattedDate() {
+        if (orderDate != null) return orderDate.format(FMT);
+        if (createdAt  != null) return createdAt.format(FMT);
+        return "—";
+    }
 
     @Override
     public String toString() {
-        return "Order#" + id + " - " + productName + " x" + quantity;
+        return "Order #" + id + " – $" + String.format("%.2f", totalPrice);
     }
 }

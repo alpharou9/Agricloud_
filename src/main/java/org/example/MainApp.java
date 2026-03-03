@@ -27,6 +27,7 @@ public class MainApp extends Application {
     // State
     // -------------------------------------------------------------------------
     private StackPane toastLayer;
+    private Scene scene;
     private final BooleanProperty darkMode = new SimpleBooleanProperty(false);
 
     // -------------------------------------------------------------------------
@@ -40,10 +41,16 @@ public class MainApp extends Application {
                 getClass().getResource("/org/example/main-view.fxml"));
         Parent root = loader.load();
 
-        Scene scene = new Scene(root, 1050, 650);
+        scene = new Scene(root, 1050, 650);
         scene.getStylesheets().add(
                 Objects.requireNonNull(
                         getClass().getResource("/style.css")).toExternalForm());
+
+        // Apply / remove the theme-dark CSS class whenever dark mode changes
+        darkMode.addListener((obs, o, n) -> {
+            if (n) scene.getRoot().getStyleClass().add("theme-dark");
+            else   scene.getRoot().getStyleClass().remove("theme-dark");
+        });
 
         stage.setTitle("AgriCloud – Farm Management");
         stage.setScene(scene);

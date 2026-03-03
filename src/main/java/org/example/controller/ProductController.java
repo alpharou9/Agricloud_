@@ -269,9 +269,10 @@ public class ProductController {
 
     private void applyFilter() {
         if (allProducts == null) return;
+        String cat    = filterCategoryCombo.getValue();
+        String status = filterStatusCombo.getValue();
+        if (cat == null || status == null) return;   // ComboBox is being repopulated
         String search  = searchField.getText().toLowerCase().trim();
-        String cat     = filterCategoryCombo.getValue();
-        String status  = filterStatusCombo.getValue();
         String sort    = sortCombo.getValue();
 
         List<Product> filtered = allProducts.stream()

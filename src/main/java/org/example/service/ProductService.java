@@ -155,6 +155,17 @@ public class ProductService {
         return productDAO.getProductCount();
     }
 
+    /** Approved products paged – used by the Orders create-order catalog. */
+    public List<Product> getApprovedProductsPage(String search, int pageSize, int offset)
+            throws SQLException {
+        return productDAO.getApprovedPage(search, pageSize, offset);
+    }
+
+    /** Total approved products matching search – for pagination math. */
+    public int countApprovedProducts(String search) throws SQLException {
+        return productDAO.countApproved(search);
+    }
+
     public List<Product> getLowStockProducts(int threshold) throws SQLException {
         return productDAO.getLowStockProducts(threshold);
     }

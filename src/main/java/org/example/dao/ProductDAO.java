@@ -71,6 +71,55 @@ public class ProductDAO {
         return 0;
     }
 
+    // -------------------------------------------------------------------------
+    // Paginated reads – used by the Orders product catalog
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns approved products matching an optional search string,
+     * server-side paged with LIMIT / OFFSET.
+     */
+    public List<Product> getApprovedPage(String search, int pageSize, int offset)
+            throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String like = "%" + (search == null ? "" : search.trim()) + "%";
+        String sql = """
+            SELECT * FROM products
+             WHERE status = 'approved'
+               AND (name LIKE ? OR description LIKE ?)
+             ORDER BY name
+             LIMIT ? OFFSET ?
+            """;
+        try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
+            ps.setString(1, like);
+            ps.setString(2, like);
+            ps.setInt(3, pageSize);
+            ps.setInt(4, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        }
+        return list;
+    }
+
+    /** Total count of approved products matching the search – for pagination math. */
+    public int countApproved(String search) throws SQLException {
+        String like = "%" + (search == null ? "" : search.trim()) + "%";
+        String sql = """
+            SELECT COUNT(*) FROM products
+             WHERE status = 'approved'
+               AND (name LIKE ? OR description LIKE ?)
+            """;
+        try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
+            ps.setString(1, like);
+            ps.setString(2, like);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
     public List<Product> getLowStockProducts(int threshold) throws SQLException {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT * FROM products WHERE quantity <= ? AND status != 'sold_out'";

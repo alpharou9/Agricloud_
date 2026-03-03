@@ -1,275 +1,837 @@
 package org.example.controller;
 
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import org.example.MainApp;
 import org.example.model.Order;
+import org.example.model.OrderDetail;
 import org.example.model.Product;
 import org.example.model.User;
 import org.example.service.OrderService;
 import org.example.service.ProductService;
 import org.example.session.UserSession;
 
+import java.io.File;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
- * UI controller for the Orders page.
+ * Controller for orders-view.fxml.
  *
- * Role behaviour:
- *  FARMER - sees only their own orders; can create, edit (if pending), cancel.
- *           The product dropdown shows only APPROVED products.
- *  ADMIN  - sees all orders; can update status on any order; cannot create orders.
- *           "New Order" button is hidden for admins.
- *
- * This controller reads the product catalog via ProductService (one-way dependency).
- * It never touches ProductDAO directly.
+ * Tab 1 "New Order"  – product catalog (paginated) + cart + place order.
+ * Tab 2 "Manage Orders" – orders table (paginated) + detail rows + edit/delete.
  */
 public class OrderController {
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // FXML bindings
-    // -------------------------------------------------------------------------
+    // =========================================================================
+
     @FXML private StackPane rootStack;
-    @FXML private VBox      orderListBox;
-    @FXML private Button    addOrderBtn;
+    @FXML private TabPane   tabPane;
+    @FXML private Tab       newOrderTab;
 
-    // -------------------------------------------------------------------------
+    // ── Tab 1: catalog ──
+    @FXML private FlowPane  productGrid;
+    @FXML private TextField searchField;
+    @FXML private Button    prevProductBtn;
+    @FXML private Button    nextProductBtn;
+    @FXML private Label     productPageLabel;
+
+    // ── Tab 1: cart ──
+    @FXML private TableView<CartItem> cartTable;
+    @FXML private Label     totalLabel;
+    @FXML private TextField shippingField;
+    @FXML private TextField cityField;
+    @FXML private TextField postalField;
+    @FXML private TextArea  notesField;
+    @FXML private Label     orderFormError;
+
+    // ── Tab 2: dashboard ──
+    @FXML private TableView<Order>       ordersTable;
+    @FXML private Button                 prevOrderBtn;
+    @FXML private Button                 nextOrderBtn;
+    @FXML private Label                  orderPageLabel;
+    @FXML private TableView<OrderDetail> detailsTable;
+
+    // =========================================================================
     // Constants
-    // -------------------------------------------------------------------------
-    private static final Map<String, String> STATUS_CLASSES = Map.of(
-            "pending",    "status-pending",
-            "confirmed",  "status-confirmed",
-            "processing", "status-processing",
-            "shipped",    "status-shipped",
-            "delivered",  "status-delivered",
-            "cancelled",  "status-cancelled");
+    // =========================================================================
 
+    private static final int    PRODUCT_PAGE_SIZE = 9;
+    private static final int    ORDER_PAGE_SIZE   = 10;
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
-    // -------------------------------------------------------------------------
+    // =========================================================================
     // State
-    // -------------------------------------------------------------------------
+    // =========================================================================
+
+    private final ObservableList<CartItem> cartItems = FXCollections.observableArrayList();
+
+    private int productPage       = 0;
+    private int productTotalPages = 1;
+    private int orderPage         = 0;
+    private int orderTotalPages   = 1;
+
+    private MainController mainController;
+
+    // Drawer (edit order)
+    private StackPane drawerOverlay;
+
     private final OrderService   orderService   = new OrderService();
     private final ProductService productService = new ProductService();
 
-    private List<Product> approvedProducts;
-    private MainController mainController;
-
-    // Drawer state
-    private StackPane drawerOverlay;
-    private Order     editingOrder;
-    private Order     editingOrderSnapshot;
-
-    // Drawer form fields
-    private ComboBox<Product> productCombo;
-    private TextField     qtyField;
-    private ComboBox<String> statusCombo;
-    private TextField     addressField;
-    private TextField     cityField;
-    private TextField     postalField;
-    private TextArea      notesField;
-    private DatePicker    deliveryPicker;
-    private Label         unitPriceLabel;
-    private Label         totalPriceLabel;
-    private Label         stockWarningLabel;
-    private Label         formError;
-
-    // -------------------------------------------------------------------------
-    // Init
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // Initialization
+    // =========================================================================
 
     @FXML
     public void initialize() {
-        refreshProducts();
-        refreshOrders();
+        setupCartTable();
+        setupOrdersTable();
+        setupDetailsTable();
         applyRoleVisibility();
+        loadProductPage();
+        loadOrderPage();
     }
 
-    public void setMainController(MainController mc) {
-        this.mainController = mc;
-    }
+    public void setMainController(MainController mc) { this.mainController = mc; }
 
+    /** Called by MainController after a role switch. */
     public void onRoleChanged() {
         applyRoleVisibility();
-        refreshOrders();
+        productPage = 0;
+        orderPage   = 0;
+        loadProductPage();
+        loadOrderPage();
     }
 
-    /** Reload the approved product list (called when products change). */
+    /** Called by MainController when products change (stock update). */
     public void refreshProducts() {
-        try {
-            approvedProducts = productService.getApprovedProducts();
-        } catch (Exception e) {
-            approvedProducts = List.of();
+        productPage = 0;
+        loadProductPage();
+    }
+
+    /** Called by MainController when navigating to the Orders page. */
+    public void refreshOrders() {
+        orderPage = 0;
+        loadOrderPage();
+    }
+
+    // =========================================================================
+    // Role visibility
+    // =========================================================================
+
+    private void applyRoleVisibility() {
+        boolean isFarmer = UserSession.getInstance().isFarmer();
+        // New Order tab is only meaningful for farmers
+        newOrderTab.setDisable(!isFarmer);
+        if (!isFarmer && tabPane != null) {
+            tabPane.getSelectionModel().select(1);
         }
     }
 
-    public void refreshOrders() {
-        orderListBox.getChildren().clear();
+    // =========================================================================
+    // ── TAB 1: PRODUCT CATALOG ────────────────────────────────────────────────
+    // =========================================================================
+
+    private void loadProductPage() {
+        String search = searchField == null ? "" : searchField.getText().trim();
         try {
-            List<Order> orders;
-            User user = UserSession.getInstance().getCurrentUser();
-            if (user.getRole() == User.Role.ADMIN) {
-                orders = orderService.getAllOrders();
-            } else {
-                orders = orderService.getFarmerOrders(user.getId());
-            }
-            if (orders.isEmpty()) {
-                Label empty = new Label("No orders yet. Click \"New Order\" to create one.");
+            int total = productService.countApprovedProducts(search);
+            productTotalPages = Math.max(1, (int) Math.ceil((double) total / PRODUCT_PAGE_SIZE));
+            if (productPage >= productTotalPages) productPage = productTotalPages - 1;
+
+            List<Product> products = productService.getApprovedProductsPage(
+                    search, PRODUCT_PAGE_SIZE, productPage * PRODUCT_PAGE_SIZE);
+
+            productGrid.getChildren().clear();
+            if (products.isEmpty()) {
+                Label empty = new Label("No products available.");
                 empty.setStyle("-fx-text-fill: #757575; -fx-font-size: 13px;");
-                orderListBox.getChildren().add(empty);
+                productGrid.getChildren().add(empty);
             } else {
-                for (Order o : orders) {
-                    orderListBox.getChildren().add(createOrderCard(o));
+                for (Product p : products) {
+                    productGrid.getChildren().add(createProductCard(p));
                 }
             }
+            productPageLabel.setText("Page " + (productPage + 1) + " / " + productTotalPages);
+            prevProductBtn.setDisable(productPage == 0);
+            nextProductBtn.setDisable(productPage >= productTotalPages - 1);
+
+        } catch (Exception e) {
+            MainApp.getInstance().showToast("Failed to load products: " + e.getMessage(), "error");
+        }
+    }
+
+    @FXML void onSearchProducts()    { productPage = 0; loadProductPage(); }
+    @FXML void onPrevProductPage()   { if (productPage > 0) { productPage--; loadProductPage(); } }
+    @FXML void onNextProductPage()   { if (productPage < productTotalPages - 1) { productPage++; loadProductPage(); } }
+
+    // ── Product card ─────────────────────────────────────────────────────────
+
+    private static final String CARD_STYLE_BASE =
+            "-fx-background-color: white;" +
+            "-fx-background-radius: 8;" +
+            "-fx-border-color: #E0E0E0;" +
+            "-fx-border-radius: 8;" +
+            "-fx-padding: 10;";
+    private static final String CARD_STYLE_HOVER =
+            "-fx-background-color: white;" +
+            "-fx-background-radius: 8;" +
+            "-fx-border-color: #4CAF50;" +
+            "-fx-border-radius: 8;" +
+            "-fx-padding: 10;";
+
+    private Node createProductCard(Product p) {
+        VBox card = new VBox(6);
+        card.setAlignment(Pos.TOP_CENTER);
+        card.setPrefWidth(155);
+        card.setStyle(CARD_STYLE_BASE);
+
+        // Clicking anywhere on the card adds the product to the cart
+        if (p.getQuantity() > 0) {
+            card.setCursor(javafx.scene.Cursor.HAND);
+            card.setOnMouseClicked(e -> onAddToCart(p));
+            card.setOnMouseEntered(e -> card.setStyle(CARD_STYLE_HOVER));
+            card.setOnMouseExited(e -> card.setStyle(CARD_STYLE_BASE));
+        }
+
+        // Thumbnail
+        StackPane imgBox = new StackPane();
+        imgBox.setPrefSize(135, 85);
+        imgBox.setStyle("-fx-background-color: #F5F5F5; -fx-background-radius: 6;");
+        if (p.getImage() != null && !p.getImage().isBlank()) {
+            File f = new File(p.getImage());
+            if (f.exists()) {
+                ImageView iv = new ImageView(
+                        new Image(f.toURI().toString(), 135, 85, true, true));
+                iv.setFitWidth(135);
+                iv.setFitHeight(85);
+                iv.setPreserveRatio(true);
+                imgBox.getChildren().add(iv);
+            } else {
+                imgBox.getChildren().add(placeholder(p.getCategory()));
+            }
+        } else {
+            imgBox.getChildren().add(placeholder(p.getCategory()));
+        }
+        card.getChildren().add(imgBox);
+
+        // Name
+        Label name = new Label(p.getName());
+        name.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+        name.setWrapText(true);
+        name.setMaxWidth(135);
+
+        // Price
+        Label price = new Label(String.format("$%.2f / %s", p.getPrice(), p.getUnit()));
+        price.setStyle("-fx-text-fill: #2E7D32; -fx-font-size: 11px;");
+
+        // Stock
+        Label stock = new Label("Stock: " + p.getQuantity());
+        stock.setStyle("-fx-text-fill: #757575; -fx-font-size: 10px;");
+
+        // Add button
+        Button add = new Button(p.getQuantity() > 0 ? "Add to Order" : "Out of Stock");
+        add.getStyleClass().add("btn-primary");
+        add.setMaxWidth(Double.MAX_VALUE);
+        add.setDisable(p.getQuantity() == 0);
+        add.setOnAction(e -> onAddToCart(p));
+
+        card.getChildren().addAll(name, price, stock, add);
+        return card;
+    }
+
+    private Label placeholder(String category) {
+        String text = category != null ? category.substring(0, Math.min(3, category.length())) : "?";
+        Label lbl = new Label(text);
+        lbl.setStyle("-fx-text-fill: #9E9E9E; -fx-font-size: 13px;");
+        return lbl;
+    }
+
+    // =========================================================================
+    // ── TAB 1: CART ──────────────────────────────────────────────────────────
+    // =========================================================================
+
+    @SuppressWarnings("unchecked")
+    private void setupCartTable() {
+        // Image
+        TableColumn<CartItem, CartItem> imgCol = new TableColumn<>("");
+        imgCol.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(p.getValue()));
+        imgCol.setCellFactory(col -> new TableCell<>() {
+            private final ImageView iv = new ImageView();
+            { iv.setFitWidth(40); iv.setFitHeight(40); iv.setPreserveRatio(true); }
+            @Override protected void updateItem(CartItem item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) { setGraphic(null); return; }
+                String img = item.getProduct().getImage();
+                if (img != null && !img.isBlank()) {
+                    File f = new File(img);
+                    if (f.exists()) {
+                        iv.setImage(new Image(f.toURI().toString(), 40, 40, true, true));
+                        setGraphic(iv);
+                        return;
+                    }
+                }
+                Label lbl = new Label("—");
+                lbl.setStyle("-fx-text-fill: #9E9E9E;");
+                setGraphic(lbl);
+            }
+        });
+        imgCol.setPrefWidth(55);
+        imgCol.setSortable(false);
+
+        // Name
+        TableColumn<CartItem, String> nameCol = new TableColumn<>("Product");
+        nameCol.setCellValueFactory(p ->
+                new SimpleStringProperty(p.getValue().getProduct().getName()));
+        nameCol.setPrefWidth(120);
+
+        // Unit price
+        TableColumn<CartItem, String> priceCol = new TableColumn<>("Unit Price");
+        priceCol.setCellValueFactory(p -> new SimpleStringProperty(
+                String.format("$%.2f", p.getValue().getProduct().getPrice())));
+        priceCol.setPrefWidth(75);
+
+        // Qty  (– label +  buttons)
+        TableColumn<CartItem, CartItem> qtyCol = new TableColumn<>("Qty");
+        qtyCol.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(p.getValue()));
+        qtyCol.setCellFactory(col -> new TableCell<>() {
+            private final Button minus = new Button("−");
+            private final Label  num   = new Label();
+            private final Button plus  = new Button("+");
+            private final HBox   box   = new HBox(4, minus, num, plus);
+            {
+                box.setAlignment(Pos.CENTER);
+                minus.setStyle("-fx-min-width: 24; -fx-min-height: 24; -fx-padding: 0;");
+                plus.setStyle ("-fx-min-width: 24; -fx-min-height: 24; -fx-padding: 0;");
+                minus.setOnAction(e -> {
+                    CartItem ci = getTableView().getItems().get(getIndex());
+                    if (ci.getQuantity() > 1) {
+                        ci.setQuantity(ci.getQuantity() - 1);
+                    } else {
+                        cartItems.remove(ci);
+                    }
+                    getTableView().refresh();
+                    updateTotals();
+                });
+                plus.setOnAction(e -> {
+                    CartItem ci = getTableView().getItems().get(getIndex());
+                    ci.setQuantity(ci.getQuantity() + 1);
+                    getTableView().refresh();
+                    updateTotals();
+                });
+            }
+            @Override protected void updateItem(CartItem ci, boolean empty) {
+                super.updateItem(ci, empty);
+                if (empty || ci == null) { setGraphic(null); return; }
+                num.setText(String.valueOf(ci.getQuantity()));
+                setGraphic(box);
+            }
+        });
+        qtyCol.setPrefWidth(90);
+        qtyCol.setSortable(false);
+
+        // Subtotal
+        TableColumn<CartItem, String> subCol = new TableColumn<>("Subtotal");
+        subCol.setCellValueFactory(p -> new SimpleStringProperty(
+                String.format("$%.2f", p.getValue().getSubtotal())));
+        subCol.setPrefWidth(75);
+
+        // Remove
+        TableColumn<CartItem, CartItem> removeCol = new TableColumn<>("");
+        removeCol.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(p.getValue()));
+        removeCol.setCellFactory(col -> new TableCell<>() {
+            private final Button btn = new Button("✕");
+            { btn.getStyleClass().add("btn-danger");
+              btn.setStyle("-fx-min-width: 28; -fx-min-height: 24; -fx-padding: 0 6;");
+              btn.setOnAction(e -> {
+                  cartItems.remove(getTableView().getItems().get(getIndex()));
+                  updateTotals();
+              }); }
+            @Override protected void updateItem(CartItem ci, boolean empty) {
+                super.updateItem(ci, empty);
+                setGraphic(empty || ci == null ? null : btn);
+            }
+        });
+        removeCol.setPrefWidth(45);
+        removeCol.setSortable(false);
+
+        cartTable.getColumns().addAll(imgCol, nameCol, priceCol, qtyCol, subCol, removeCol);
+        cartTable.setItems(cartItems);
+        cartTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        cartTable.setFixedCellSize(50);
+        cartTable.setPlaceholder(new Label("No items. Click \"Add to Order\" on a product."));
+    }
+
+    private void onAddToCart(Product p) {
+        for (CartItem ci : cartItems) {
+            if (ci.getProduct().getId() == p.getId()) {
+                ci.setQuantity(ci.getQuantity() + 1);
+                cartTable.refresh();
+                updateTotals();
+                return;
+            }
+        }
+        cartItems.add(new CartItem(p, 1));
+        updateTotals();
+    }
+
+    private void updateTotals() {
+        double total = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
+        totalLabel.setText(String.format("$%.2f", total));
+    }
+
+    @FXML void onClearCart() {
+        cartItems.clear();
+        updateTotals();
+    }
+
+    @FXML
+    void onPlaceOrder() {
+        orderFormError.setText("");
+        if (cartItems.isEmpty()) {
+            orderFormError.setText("Add at least one product to the order.");
+            return;
+        }
+        String address = shippingField.getText().trim();
+        if (address.isBlank()) {
+            orderFormError.setText("Shipping address is required.");
+            return;
+        }
+
+        Order order = new Order();
+        order.setShippingAddress(address);
+        order.setShippingCity(cityField.getText().trim());
+        order.setShippingPostal(postalField.getText().trim());
+        order.setNotes(notesField.getText().trim());
+
+        List<OrderDetail> details = new ArrayList<>();
+        for (CartItem ci : cartItems) {
+            OrderDetail d = new OrderDetail();
+            d.setProductId(ci.getProduct().getId());
+            d.setQuantity(ci.getQuantity());
+            details.add(d);
+        }
+
+        try {
+            orderService.createOrder(order, details, UserSession.getInstance().getCurrentUser());
+            MainApp.getInstance().showToast("Order placed successfully!", "success");
+            cartItems.clear();
+            updateTotals();
+            shippingField.clear();
+            cityField.clear();
+            postalField.clear();
+            notesField.clear();
+            loadProductPage();    // refresh stock numbers
+            loadOrderPage();
+            if (mainController != null) mainController.notifyProductsChanged();
+        } catch (Exception e) {
+            orderFormError.setText(e.getMessage());
+        }
+    }
+
+    // =========================================================================
+    // ── TAB 2: ORDERS DASHBOARD ───────────────────────────────────────────────
+    // =========================================================================
+
+    private void loadOrderPage() {
+        User user = UserSession.getInstance().getCurrentUser();
+        try {
+            int total = user.getRole() == User.Role.ADMIN
+                    ? orderService.countAllOrders()
+                    : orderService.countFarmerOrders(user.getId());
+
+            orderTotalPages = Math.max(1, (int) Math.ceil((double) total / ORDER_PAGE_SIZE));
+            if (orderPage >= orderTotalPages) orderPage = orderTotalPages - 1;
+
+            List<Order> orders = user.getRole() == User.Role.ADMIN
+                    ? orderService.getAllOrdersPage(ORDER_PAGE_SIZE, orderPage * ORDER_PAGE_SIZE)
+                    : orderService.getFarmerOrdersPage(user.getId(), ORDER_PAGE_SIZE, orderPage * ORDER_PAGE_SIZE);
+
+            ordersTable.setItems(FXCollections.observableArrayList(orders));
+            detailsTable.setItems(FXCollections.observableArrayList());
+
+            orderPageLabel.setText("Page " + (orderPage + 1) + " / " + orderTotalPages);
+            prevOrderBtn.setDisable(orderPage == 0);
+            nextOrderBtn.setDisable(orderPage >= orderTotalPages - 1);
+
         } catch (Exception e) {
             MainApp.getInstance().showToast("Failed to load orders: " + e.getMessage(), "error");
         }
     }
 
-    private void applyRoleVisibility() {
-        boolean isFarmer = UserSession.getInstance().isFarmer();
-        if (addOrderBtn != null) addOrderBtn.setVisible(isFarmer);
+    @FXML void onPrevOrderPage() { if (orderPage > 0) { orderPage--; loadOrderPage(); } }
+    @FXML void onNextOrderPage() { if (orderPage < orderTotalPages - 1) { orderPage++; loadOrderPage(); } }
+
+    // ── Orders table ──────────────────────────────────────────────────────────
+
+    @SuppressWarnings("unchecked")
+    private void setupOrdersTable() {
+        TableColumn<Order, String> idCol = new TableColumn<>("ID");
+        idCol.setCellValueFactory(p -> new SimpleStringProperty("#" + p.getValue().getId()));
+        idCol.setPrefWidth(55);
+
+        TableColumn<Order, String> dateCol = new TableColumn<>("Date");
+        dateCol.setCellValueFactory(p ->
+                new SimpleStringProperty(p.getValue().getFormattedDate()));
+        dateCol.setPrefWidth(110);
+
+        TableColumn<Order, String> totalCol = new TableColumn<>("Total");
+        totalCol.setCellValueFactory(p -> new SimpleStringProperty(
+                String.format("$%.2f", p.getValue().getTotalPrice())));
+        totalCol.setPrefWidth(80);
+
+        TableColumn<Order, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(p ->
+                new SimpleStringProperty(p.getValue().getStatus()));
+        statusCol.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(String s, boolean empty) {
+                super.updateItem(s, empty);
+                if (empty || s == null) { setGraphic(null); return; }
+                Label badge = new Label(s);
+                badge.getStyleClass().addAll("status-badge", "status-" + s);
+                setGraphic(badge);
+                setText(null);
+            }
+        });
+        statusCol.setPrefWidth(90);
+
+        TableColumn<Order, Order> actionsCol = new TableColumn<>("Actions");
+        actionsCol.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(p.getValue()));
+        actionsCol.setCellFactory(col -> new TableCell<>() {
+            @Override protected void updateItem(Order o, boolean empty) {
+                super.updateItem(o, empty);
+                if (empty || o == null) { setGraphic(null); return; }
+                HBox box = new HBox(6);
+                box.setAlignment(Pos.CENTER_LEFT);
+                User user = UserSession.getInstance().getCurrentUser();
+
+                Button edit = new Button("Edit");
+                edit.getStyleClass().add("btn-secondary");
+                edit.setOnAction(e -> openEditDrawer(o));
+                box.getChildren().add(edit);
+
+                if (user.getRole() == User.Role.ADMIN) {
+                    Button delete = new Button("Delete");
+                    delete.getStyleClass().add("btn-danger");
+                    delete.setOnAction(e -> confirmDelete(o));
+                    box.getChildren().add(delete);
+                } else if (!("cancelled".equals(o.getStatus()) ||
+                             "delivered".equals(o.getStatus()))) {
+                    Button cancel = new Button("Cancel");
+                    cancel.getStyleClass().add("btn-danger");
+                    cancel.setOnAction(e -> confirmCancel(o));
+                    box.getChildren().add(cancel);
+                }
+                setGraphic(box);
+            }
+        });
+        actionsCol.setPrefWidth(160);
+        actionsCol.setSortable(false);
+
+        ordersTable.getColumns().addAll(idCol, dateCol, totalCol, statusCol, actionsCol);
+        ordersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        ordersTable.setPlaceholder(new Label("No orders yet."));
+
+        // Load detail rows when an order row is selected
+        ordersTable.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
+            if (selected != null) loadDetailsFor(selected);
+            else detailsTable.setItems(FXCollections.observableArrayList());
+        });
     }
 
-    // -------------------------------------------------------------------------
-    // FXML actions
-    // -------------------------------------------------------------------------
+    // ── Detail rows ───────────────────────────────────────────────────────────
 
-    @FXML
-    void onAddOrder() {
-        if (!UserSession.getInstance().isFarmer()) {
-            MainApp.getInstance().showToast("Only farmers can place orders.", "error");
-            return;
+    private void loadDetailsFor(Order order) {
+        try {
+            List<OrderDetail> details = orderService.getOrderDetails(order.getId());
+            detailsTable.setItems(FXCollections.observableArrayList(details));
+        } catch (Exception e) {
+            MainApp.getInstance().showToast("Could not load order details: " + e.getMessage(), "error");
         }
-        openDrawer(null);
     }
 
-    // -------------------------------------------------------------------------
-    // Order card
-    // -------------------------------------------------------------------------
-
-    private Node createOrderCard(Order o) {
-        VBox card = new VBox(6);
-        card.getStyleClass().add("order-card");
-        card.setPadding(new Insets(14));
-
-        // Header row: ID + status
-        HBox header = new HBox(10);
-        header.setAlignment(Pos.CENTER_LEFT);
-        Label idLabel = new Label("#" + o.getId() + " - " + o.getProductName());
-        idLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
-        HBox.setHgrow(idLabel, Priority.ALWAYS);
-
-        Label statusBadge = new Label(o.getStatus());
-        String sc = STATUS_CLASSES.getOrDefault(o.getStatus(), "");
-        statusBadge.getStyleClass().addAll("status-badge", sc);
-
-        header.getChildren().addAll(idLabel, statusBadge);
-        card.getChildren().add(header);
-
-        // Shipping address
-        String addr = o.getShippingAddress() != null ? o.getShippingAddress() : "";
-        if (o.getShippingCity() != null && !o.getShippingCity().isBlank())
-            addr += ", " + o.getShippingCity();
-        Label addrLabel = new Label("Location: " + addr);
-        addrLabel.setStyle("-fx-text-fill: #757575; -fx-font-size: 11px;");
-        card.getChildren().add(addrLabel);
-
-        // Pricing
-        Label priceLabel = new Label(
-                String.format("Qty: %d  x  $%.2f  =  $%.2f",
-                              o.getQuantity(), o.getUnitPrice(), o.getTotalPrice()));
-        priceLabel.setStyle("-fx-font-size: 12px;");
-        card.getChildren().add(priceLabel);
-
-        // Order date
-        if (o.getOrderDate() != null) {
-            Label dateLabel = new Label("Ordered: " + o.getOrderDate().format(DATE_FMT));
-            dateLabel.setStyle("-fx-text-fill: #757575; -fx-font-size: 11px;");
-            card.getChildren().add(dateLabel);
-        }
-
-        // Action buttons
-        HBox actions = new HBox(8);
-        actions.setAlignment(Pos.CENTER_RIGHT);
-
-        User user = UserSession.getInstance().getCurrentUser();
-        boolean canEdit = user.getRole() == User.Role.ADMIN ||
-                (user.getRole() == User.Role.FARMER &&
-                 o.getCustomerId() == user.getId() &&
-                 "pending".equals(o.getStatus()));
-
-        if (canEdit) {
-            Button edit = new Button("Edit");
-            edit.getStyleClass().add("btn-secondary");
-            edit.setOnAction(e -> openDrawer(o));
-            actions.getChildren().add(edit);
-        }
-
-        boolean canCancel = !("cancelled".equals(o.getStatus()) ||
-                              "delivered".equals(o.getStatus())) &&
-                            (user.getRole() == User.Role.ADMIN ||
-                             o.getCustomerId() == user.getId());
-        if (canCancel) {
-            Button cancel = new Button("Cancel");
-            cancel.getStyleClass().add("btn-danger");
-            cancel.setOnAction(e -> cancelOrder(o));
-            actions.getChildren().add(cancel);
-        }
-
-        // Admin: status update dropdown - uses updateOrderStatus() to avoid stock-diff issues
-        if (user.getRole() == User.Role.ADMIN) {
-            ComboBox<String> statusUpdate = new ComboBox<>();
-            statusUpdate.getItems().addAll(
-                    "pending","confirmed","processing","shipped","delivered","cancelled");
-            statusUpdate.setValue(o.getStatus());
-            final String[] currentStatus = {o.getStatus()};
-            statusUpdate.setOnAction(e -> {
-                String newStatus = statusUpdate.getValue();
-                if (!newStatus.equals(currentStatus[0])) {
-                    try {
-                        orderService.updateOrderStatus(o.getId(), newStatus, user);
-                        currentStatus[0] = newStatus;
-                        refreshOrders();
-                        MainApp.getInstance().showToast("Order status updated.", "success");
-                        if (mainController != null) mainController.notifyProductsChanged();
-                    } catch (Exception ex) {
-                        MainApp.getInstance().showToast(ex.getMessage(), "error");
-                        statusUpdate.setValue(currentStatus[0]);
+    @SuppressWarnings("unchecked")
+    private void setupDetailsTable() {
+        TableColumn<OrderDetail, OrderDetail> imgCol = new TableColumn<>("");
+        imgCol.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(p.getValue()));
+        imgCol.setCellFactory(col -> new TableCell<>() {
+            private final ImageView iv = new ImageView();
+            { iv.setFitWidth(38); iv.setFitHeight(38); iv.setPreserveRatio(true); }
+            @Override protected void updateItem(OrderDetail d, boolean empty) {
+                super.updateItem(d, empty);
+                if (empty || d == null) { setGraphic(null); return; }
+                String img = d.getProductImage();
+                if (img != null && !img.isBlank()) {
+                    File f = new File(img);
+                    if (f.exists()) {
+                        iv.setImage(new Image(f.toURI().toString(), 38, 38, true, true));
+                        setGraphic(iv);
+                        return;
                     }
                 }
-            });
-            actions.getChildren().add(statusUpdate);
-        }
+                Label lbl = new Label("—");
+                lbl.setStyle("-fx-text-fill: #9E9E9E;");
+                setGraphic(lbl);
+            }
+        });
+        imgCol.setPrefWidth(50);
+        imgCol.setSortable(false);
 
-        if (!actions.getChildren().isEmpty()) card.getChildren().add(actions);
-        return card;
+        TableColumn<OrderDetail, String> nameCol = new TableColumn<>("Product");
+        nameCol.setCellValueFactory(p ->
+                new SimpleStringProperty(p.getValue().getProductName()));
+        nameCol.setPrefWidth(150);
+
+        TableColumn<OrderDetail, String> qtyCol = new TableColumn<>("Qty");
+        qtyCol.setCellValueFactory(p -> new SimpleStringProperty(
+                p.getValue().getQuantity() + " " + nvl(p.getValue().getProductUnit())));
+        qtyCol.setPrefWidth(70);
+
+        TableColumn<OrderDetail, String> unitPriceCol = new TableColumn<>("Unit Price");
+        unitPriceCol.setCellValueFactory(p -> new SimpleStringProperty(
+                String.format("$%.2f", p.getValue().getUnitPrice())));
+        unitPriceCol.setPrefWidth(80);
+
+        TableColumn<OrderDetail, String> subtotalCol = new TableColumn<>("Subtotal");
+        subtotalCol.setCellValueFactory(p -> new SimpleStringProperty(
+                String.format("$%.2f", p.getValue().getSubtotal())));
+        subtotalCol.setPrefWidth(80);
+
+        detailsTable.getColumns().addAll(imgCol, nameCol, qtyCol, unitPriceCol, subtotalCol);
+        detailsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        detailsTable.setFixedCellSize(48);
+        detailsTable.setPlaceholder(new Label("Select an order above to see its items."));
     }
 
-    // -------------------------------------------------------------------------
-    // Cancel order
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // ── EDIT ORDER DRAWER ────────────────────────────────────────────────────
+    // =========================================================================
 
-    private void cancelOrder(Order o) {
+    private void openEditDrawer(Order order) {
+        List<OrderDetail> existingDetails;
+        try {
+            existingDetails = orderService.getOrderDetails(order.getId());
+        } catch (Exception e) {
+            MainApp.getInstance().showToast("Failed to load order: " + e.getMessage(), "error");
+            return;
+        }
+
+        // Cart items for the drawer
+        ObservableList<CartItem> editCart = FXCollections.observableArrayList();
+        for (OrderDetail d : existingDetails) {
+            // Re-use CartItem with a minimal Product shell for display
+            Product shell = new Product();
+            shell.setId(d.getProductId());
+            shell.setName(d.getProductName() != null ? d.getProductName() : "Unknown");
+            shell.setImage(d.getProductImage());
+            shell.setUnit(d.getProductUnit());
+            shell.setPrice(d.getUnitPrice());
+            shell.setQuantity(Integer.MAX_VALUE); // no stock cap in edit mode
+            editCart.add(new CartItem(shell, d.getQuantity()));
+        }
+
+        drawerOverlay = new StackPane();
+        drawerOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.45);");
+        drawerOverlay.setAlignment(Pos.CENTER_RIGHT);
+        drawerOverlay.setOnMouseClicked(e -> {
+            if (e.getTarget() == drawerOverlay) closeDrawer();
+        });
+
+        VBox panel = new VBox(12);
+        panel.setMaxWidth(420);
+        panel.setPrefWidth(420);
+        panel.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-background-radius: 8;" +
+            "-fx-padding: 24;" +
+            "-fx-effect: dropshadow(gaussian,rgba(0,0,0,0.35),24,0,-4,0);");
+
+        Label title = new Label("Edit Order #" + order.getId());
+        title.setStyle("-fx-font-size: 17px; -fx-font-weight: bold;");
+
+        // Status
+        ComboBox<String> statusCombo = new ComboBox<>();
+        statusCombo.getItems().addAll(
+                "pending","confirmed","processing","shipped","delivered","cancelled");
+        statusCombo.setValue(order.getStatus());
+        statusCombo.setMaxWidth(Double.MAX_VALUE);
+
+        // Shipping
+        TextField addrField   = new TextField(nvl(order.getShippingAddress()));
+        TextField cityFld     = new TextField(nvl(order.getShippingCity()));
+        TextField postalFld   = new TextField(nvl(order.getShippingPostal()));
+        TextArea  notesFld    = new TextArea(nvl(order.getNotes()));
+        notesFld.setPrefRowCount(2);
+        notesFld.setWrapText(true);
+
+        // Editable items table inside the drawer
+        TableView<CartItem> editTable = new TableView<>(editCart);
+        editTable.setPrefHeight(180);
+        editTable.setFixedCellSize(46);
+
+        TableColumn<CartItem, String> eName = new TableColumn<>("Product");
+        eName.setCellValueFactory(p ->
+                new SimpleStringProperty(p.getValue().getProduct().getName()));
+        eName.setPrefWidth(130);
+
+        TableColumn<CartItem, CartItem> eQty = buildEditQtyColumn(editCart, editTable);
+        eQty.setPrefWidth(95);
+
+        TableColumn<CartItem, String> eSub = new TableColumn<>("Subtotal");
+        eSub.setCellValueFactory(p -> new SimpleStringProperty(
+                String.format("$%.2f", p.getValue().getSubtotal())));
+        eSub.setPrefWidth(75);
+
+        TableColumn<CartItem, CartItem> eRm = new TableColumn<>("");
+        eRm.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(p.getValue()));
+        eRm.setCellFactory(col -> new TableCell<>() {
+            private final Button btn = new Button("✕");
+            { btn.getStyleClass().add("btn-danger");
+              btn.setStyle("-fx-min-width:26;-fx-min-height:22;-fx-padding:0 5;");
+              btn.setOnAction(e -> { editCart.remove(getTableView().getItems().get(getIndex())); }); }
+            @Override protected void updateItem(CartItem ci, boolean empty) {
+                super.updateItem(ci, empty);
+                setGraphic(empty || ci == null ? null : btn);
+            }
+        });
+        eRm.setPrefWidth(40);
+        eRm.setSortable(false);
+
+        //noinspection unchecked
+        editTable.getColumns().addAll(eName, eQty, eSub, eRm);
+        editTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        Label drawerError = new Label("");
+        drawerError.setStyle("-fx-text-fill: #F44336; -fx-font-size: 11px;");
+        drawerError.setWrapText(true);
+
+        Button save   = new Button("Save Changes");
+        Button cancel = new Button("Cancel");
+        save.getStyleClass().add("btn-primary");
+        cancel.getStyleClass().add("btn-secondary");
+        save.setMaxWidth(Double.MAX_VALUE);
+        cancel.setMaxWidth(Double.MAX_VALUE);
+        cancel.setOnAction(e -> closeDrawer());
+
+        save.setOnAction(e -> {
+            drawerError.setText("");
+            if (editCart.isEmpty()) {
+                drawerError.setText("Order must have at least one item.");
+                return;
+            }
+            // Build new details list from editCart
+            List<OrderDetail> newDetails = new ArrayList<>();
+            for (CartItem ci : editCart) {
+                OrderDetail d = new OrderDetail();
+                d.setProductId(ci.getProduct().getId());
+                d.setQuantity(ci.getQuantity());
+                newDetails.add(d);
+            }
+            order.setStatus(statusCombo.getValue());
+            order.setShippingAddress(addrField.getText().trim());
+            order.setShippingCity(cityFld.getText().trim());
+            order.setShippingPostal(postalFld.getText().trim());
+            order.setNotes(notesFld.getText().trim());
+            try {
+                orderService.updateOrder(order, newDetails,
+                        UserSession.getInstance().getCurrentUser());
+                MainApp.getInstance().showToast("Order updated.", "success");
+                closeDrawer();
+                loadOrderPage();
+                if (mainController != null) mainController.notifyProductsChanged();
+            } catch (Exception ex) {
+                drawerError.setText(ex.getMessage());
+            }
+        });
+
+        panel.getChildren().addAll(
+                title,
+                labeled("Status", statusCombo),
+                labeled("Shipping Address", addrField),
+                new HBox(8, withLabel("City", cityFld), withLabel("Postal", postalFld)),
+                labeled("Notes", notesFld),
+                new Label("Items:"),
+                editTable,
+                drawerError,
+                save, cancel);
+
+        drawerOverlay.getChildren().add(panel);
+        rootStack.getChildren().add(drawerOverlay);
+    }
+
+    /** Qty column with +/− buttons for the edit drawer table. */
+    private TableColumn<CartItem, CartItem> buildEditQtyColumn(
+            ObservableList<CartItem> cart, TableView<CartItem> table) {
+        TableColumn<CartItem, CartItem> col = new TableColumn<>("Qty");
+        col.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(p.getValue()));
+        col.setCellFactory(c -> new TableCell<>() {
+            private final Button minus = new Button("−");
+            private final Label  num   = new Label();
+            private final Button plus  = new Button("+");
+            private final HBox   box   = new HBox(4, minus, num, plus);
+            {
+                box.setAlignment(Pos.CENTER);
+                minus.setStyle("-fx-min-width:22;-fx-min-height:22;-fx-padding:0;");
+                plus.setStyle ("-fx-min-width:22;-fx-min-height:22;-fx-padding:0;");
+                minus.setOnAction(e -> {
+                    CartItem ci = table.getItems().get(getIndex());
+                    if (ci.getQuantity() > 1) ci.setQuantity(ci.getQuantity() - 1);
+                    else cart.remove(ci);
+                    table.refresh();
+                });
+                plus.setOnAction(e -> {
+                    CartItem ci = table.getItems().get(getIndex());
+                    ci.setQuantity(ci.getQuantity() + 1);
+                    table.refresh();
+                });
+            }
+            @Override protected void updateItem(CartItem ci, boolean empty) {
+                super.updateItem(ci, empty);
+                if (empty || ci == null) { setGraphic(null); return; }
+                num.setText(String.valueOf(ci.getQuantity()));
+                setGraphic(box);
+            }
+        });
+        col.setSortable(false);
+        return col;
+    }
+
+    private void closeDrawer() {
+        rootStack.getChildren().remove(drawerOverlay);
+        drawerOverlay = null;
+    }
+
+    // =========================================================================
+    // Cancel / Delete helpers
+    // =========================================================================
+
+    private void confirmDelete(Order o) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Cancel Order");
-        alert.setHeaderText("Cancel order #" + o.getId() + "?");
-        alert.setContentText("Stock will be restored to the product.");
+        alert.setTitle("Delete Order");
+        alert.setHeaderText("Permanently delete Order #" + o.getId() + "?");
+        alert.setContentText("Stock will be restored if the order was still active.");
         alert.showAndWait().ifPresent(btn -> {
             if (btn == ButtonType.OK) {
                 try {
-                    orderService.cancelOrder(o.getId(),
+                    orderService.deleteOrder(o.getId(),
                             UserSession.getInstance().getCurrentUser());
-                    MainApp.getInstance().showToast("Order cancelled. Stock restored.", "info");
-                    refreshOrders();
+                    MainApp.getInstance().showToast("Order deleted.", "info");
+                    loadOrderPage();
                     if (mainController != null) mainController.notifyProductsChanged();
                 } catch (Exception e) {
                     MainApp.getInstance().showToast(e.getMessage(), "error");
@@ -278,207 +840,29 @@ public class OrderController {
         });
     }
 
-    // -------------------------------------------------------------------------
-    // Drawer - Add / Edit form
-    // -------------------------------------------------------------------------
-
-    private void openDrawer(Order existing) {
-        editingOrder         = existing;
-        editingOrderSnapshot = copyOrder(existing);
-
-        drawerOverlay = new StackPane();
-        drawerOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.4);");
-        drawerOverlay.setAlignment(Pos.CENTER_RIGHT);
-        drawerOverlay.setOnMouseClicked(e -> {
-            if (e.getTarget() == drawerOverlay) closeDrawer();
+    private void confirmCancel(Order o) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Cancel Order");
+        alert.setHeaderText("Cancel Order #" + o.getId() + "?");
+        alert.setContentText("Stock will be restored.");
+        alert.showAndWait().ifPresent(btn -> {
+            if (btn == ButtonType.OK) {
+                try {
+                    orderService.cancelOrder(o.getId(),
+                            UserSession.getInstance().getCurrentUser());
+                    MainApp.getInstance().showToast("Order cancelled.", "info");
+                    loadOrderPage();
+                    if (mainController != null) mainController.notifyProductsChanged();
+                } catch (Exception e) {
+                    MainApp.getInstance().showToast(e.getMessage(), "error");
+                }
+            }
         });
-
-        VBox panel = new VBox(12);
-        panel.setMaxWidth(400);
-        panel.setPrefWidth(400);
-        // Inline style to avoid CSS variable resolution issues in setStyle()
-        panel.setStyle(
-            "-fx-background-color: white;" +
-            "-fx-background-radius: 8;" +
-            "-fx-padding: 24;" +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 24, 0, -4, 0);");
-
-        Label title = new Label(existing == null ? "New Order" : "Edit Order");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-
-        // Product dropdown (reads from ProductService - one-way dependency)
-        productCombo = new ComboBox<>();
-        productCombo.getItems().addAll(approvedProducts);
-        productCombo.setConverter(new javafx.util.StringConverter<>() {
-            @Override public String toString(Product p) {
-                if (p == null) return "";
-                return p.getName() + " ($" + p.getPrice() + "/" + p.getUnit() +
-                       " - stock: " + p.getQuantity() + ")";
-            }
-            @Override public Product fromString(String s) { return null; }
-        });
-        productCombo.setMaxWidth(Double.MAX_VALUE);
-
-        stockWarningLabel = new Label("");
-        stockWarningLabel.setStyle("-fx-text-fill: #FB8C00; -fx-font-size: 11px;");
-        unitPriceLabel  = new Label("Unit Price: -");
-        totalPriceLabel = new Label("Total: -");
-        totalPriceLabel.setStyle("-fx-font-weight: bold;");
-
-        if (existing != null && approvedProducts != null) {
-            approvedProducts.stream()
-                    .filter(pp -> pp.getId() == existing.getProductId())
-                    .findFirst()
-                    .ifPresent(productCombo::setValue);
-        }
-
-        qtyField = new TextField(existing != null ? String.valueOf(existing.getQuantity()) : "1");
-        qtyField.setPromptText("Quantity *");
-
-        productCombo.valueProperty().addListener((obs, o, n) -> updatePriceCalc());
-        qtyField.textProperty().addListener((obs, o, n) -> updatePriceCalc());
-        updatePriceCalc();
-
-        statusCombo = new ComboBox<>();
-        statusCombo.getItems().addAll(
-                "pending","confirmed","processing","shipped","delivered","cancelled");
-        statusCombo.setValue(existing != null ? existing.getStatus() : "pending");
-        statusCombo.setMaxWidth(Double.MAX_VALUE);
-        statusCombo.setDisable(existing == null);
-
-        addressField = new TextField(existing != null ? nvl(existing.getShippingAddress()) : "");
-        addressField.setPromptText("Shipping address *");
-
-        cityField = new TextField(existing != null ? nvl(existing.getShippingCity()) : "");
-        cityField.setPromptText("City");
-
-        postalField = new TextField(existing != null ? nvl(existing.getShippingPostal()) : "");
-        postalField.setPromptText("Postal code");
-
-        notesField = new TextArea(existing != null ? nvl(existing.getNotes()) : "");
-        notesField.setPromptText("Notes / special instructions");
-        notesField.setPrefRowCount(2);
-        notesField.setWrapText(true);
-
-        deliveryPicker = new DatePicker(existing != null ? existing.getDeliveryDate() : null);
-        deliveryPicker.setMaxWidth(Double.MAX_VALUE);
-
-        formError = new Label("");
-        formError.setStyle("-fx-text-fill: #F44336; -fx-font-size: 11px;");
-        formError.setWrapText(true);
-
-        Button save   = new Button(existing == null ? "Place Order" : "Save Changes");
-        Button cancel = new Button("Cancel");
-        save.getStyleClass().add("btn-primary");
-        cancel.getStyleClass().add("btn-secondary");
-        save.setOnAction(e -> submitForm());
-        cancel.setOnAction(e -> closeDrawer());
-        save.setMaxWidth(Double.MAX_VALUE);
-        cancel.setMaxWidth(Double.MAX_VALUE);
-
-        panel.getChildren().addAll(
-                title,
-                labeled("Product *", productCombo),
-                stockWarningLabel,
-                unitPriceLabel,
-                labeled("Quantity *", qtyField),
-                totalPriceLabel,
-                labeled("Status", statusCombo),
-                labeled("Shipping Address *", addressField),
-                labeled("City", cityField),
-                labeled("Postal Code", postalField),
-                labeled("Notes", notesField),
-                labeled("Delivery Date", deliveryPicker),
-                formError,
-                save, cancel);
-
-        drawerOverlay.getChildren().add(panel);
-        rootStack.getChildren().add(drawerOverlay);
     }
 
-    private void closeDrawer() {
-        rootStack.getChildren().remove(drawerOverlay);
-        drawerOverlay = null;
-    }
-
-    private void updatePriceCalc() {
-        Product selected = productCombo.getValue();
-        if (selected == null) {
-            unitPriceLabel.setText("Unit Price: -");
-            totalPriceLabel.setText("Total: -");
-            stockWarningLabel.setText("");
-            return;
-        }
-        unitPriceLabel.setText(String.format("Unit Price: $%.2f / %s",
-                                              selected.getPrice(), selected.getUnit()));
-        try {
-            int qty = Integer.parseInt(qtyField.getText().trim());
-            totalPriceLabel.setText(String.format("Total: $%.2f", selected.getPrice() * qty));
-            if (qty > selected.getQuantity()) {
-                stockWarningLabel.setText(
-                        "Only " + selected.getQuantity() + " " + selected.getUnit() + " in stock.");
-            } else {
-                stockWarningLabel.setText("");
-            }
-        } catch (NumberFormatException e) {
-            totalPriceLabel.setText("Total: -");
-        }
-    }
-
-    private void submitForm() {
-        formError.setText("");
-        Product selectedProduct = productCombo.getValue();
-        if (selectedProduct == null) {
-            formError.setText("Please select a product.");
-            return;
-        }
-        int qty;
-        try {
-            qty = Integer.parseInt(qtyField.getText().trim());
-            if (qty <= 0) throw new NumberFormatException();
-        } catch (NumberFormatException e) {
-            formError.setText("Quantity must be a positive integer.");
-            return;
-        }
-        String address = addressField.getText().trim();
-        if (address.isBlank()) {
-            formError.setText("Shipping address is required.");
-            return;
-        }
-
-        Order o = editingOrder != null ? editingOrder : new Order();
-        o.setProductId(selectedProduct.getId());
-        o.setQuantity(qty);
-        o.setUnitPrice(selectedProduct.getPrice());
-        o.setTotalPrice(selectedProduct.getPrice() * qty);
-        o.setStatus(statusCombo.getValue());
-        o.setShippingAddress(address);
-        o.setShippingCity(cityField.getText().trim());
-        o.setShippingPostal(postalField.getText().trim());
-        o.setNotes(notesField.getText().trim());
-        o.setDeliveryDate(deliveryPicker.getValue());
-
-        try {
-            User user = UserSession.getInstance().getCurrentUser();
-            if (editingOrder == null) {
-                orderService.createOrder(o, user);
-                MainApp.getInstance().showToast("Order placed successfully.", "success");
-            } else {
-                orderService.updateOrder(o, editingOrderSnapshot, user);
-                MainApp.getInstance().showToast("Order updated.", "success");
-            }
-            closeDrawer();
-            refreshOrders();
-            refreshProducts();
-            if (mainController != null) mainController.notifyProductsChanged();
-        } catch (Exception e) {
-            formError.setText(e.getMessage());
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // UI helpers
+    // =========================================================================
 
     private Node labeled(String text, Node control) {
         VBox box = new VBox(4);
@@ -488,20 +872,34 @@ public class OrderController {
         return box;
     }
 
+    private VBox withLabel(String text, TextField field) {
+        VBox box = new VBox(4);
+        Label lbl = new Label(text);
+        lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #757575;");
+        box.getChildren().addAll(lbl, field);
+        HBox.setHgrow(box, Priority.ALWAYS);
+        return box;
+    }
+
     private String nvl(String s) { return s != null ? s : ""; }
 
-    /** Shallow snapshot of an Order for stock-diff calculation in updateOrder(). */
-    private Order copyOrder(Order src) {
-        if (src == null) return null;
-        Order copy = new Order();
-        copy.setId(src.getId());
-        copy.setCustomerId(src.getCustomerId());
-        copy.setProductId(src.getProductId());
-        copy.setSellerId(src.getSellerId());
-        copy.setQuantity(src.getQuantity());
-        copy.setUnitPrice(src.getUnitPrice());
-        copy.setTotalPrice(src.getTotalPrice());
-        copy.setStatus(src.getStatus());
-        return copy;
+    // =========================================================================
+    // CartItem – inner model class
+    // =========================================================================
+
+    /** Holds a Product + quantity for the cart and edit-drawer tables. */
+    public static class CartItem {
+        private final Product product;
+        private int quantity;
+
+        public CartItem(Product product, int quantity) {
+            this.product  = product;
+            this.quantity = quantity;
+        }
+
+        public Product getProduct()        { return product; }
+        public int     getQuantity()       { return quantity; }
+        public void    setQuantity(int q)  { this.quantity = q; }
+        public double  getSubtotal()       { return product.getPrice() * quantity; }
     }
 }
