@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.WebView?>
+
+<VBox spacing="15" alignment="CENTER" style="-fx-padding: 20; -fx-background-color: #f4f7f0;"
+      xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="esprit.shahed.controller.MapPopupController">
+    <Label text="Click on the Map to Pick a Farm Location" style="-fx-font-weight: bold; -fx-font-size: 16;"/>
+    <WebView fx:id="mapWebView" prefHeight="450.0" prefWidth="700.0" />
+    <HBox spacing="15" alignment="CENTER">
+        <Button text="Confirm Selection" onAction="#handleConfirm"
+                style="-fx-background-color: #5cb85c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10; -fx-padding: 10 20;"/>
+        <Button text="Cancel" onAction="#handleCancel" style="-fx-background-radius: 10; -fx-padding: 10 20;"/>
+    </HBox>
+</VBox>

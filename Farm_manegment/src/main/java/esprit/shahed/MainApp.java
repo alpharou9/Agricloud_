@@ -10,15 +10,15 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         URL fxmlLocation = getClass().getResource("/fxml/FarmView.fxml");
-        if (fxmlLocation == null) throw new RuntimeException("FXML not found!");
+        if (fxmlLocation == null) {
+            throw new RuntimeException("FXML File not found! Check your /resources/fxml/ folder.");
+        }
 
         FXMLLoader fxmlLoader = new FXMLLoader(fxmlLocation);
-        Scene scene = new Scene(fxmlLoader.load(), 850, 500);
+        Scene scene = new Scene(fxmlLoader.load(), 1000, 650); // Adjusted size for better view
 
-        stage.setTitle("Farm Management Dashboard");
+        stage.setTitle("Shahed Farm & Fields Management System");
         stage.setScene(scene);
         stage.show();
     }
-
-    public static void main(String[] args) { launch(args); }
 }

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FarmService {
-    // Correctly accessing connection via getInstance()
     private final Connection connection = DatabaseConnection.getInstance().getConnection();
 
     public void addFarm(Farm farm) {
@@ -19,10 +18,14 @@ public class FarmService {
             pst.setDouble(4, farm.getLongitude());
             pst.setDouble(5, farm.getArea());
             pst.setString(6, farm.getFarmType());
-            pst.setString(7, farm.getStatus());
+            pst.setString(7, farm.getStatus()); // This will be "Pending" from the controller
             pst.setString(8, farm.getDescription());
             pst.executeUpdate();
-        } catch (SQLException e) { e.printStackTrace(); }
+            System.out.println("Farm added successfully!");
+        } catch (SQLException e) {
+            System.err.println("Error adding farm: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public List<Farm> getAllFarms() {

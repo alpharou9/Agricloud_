@@ -1,17 +1,22 @@
 package esprit.shahed;
 
 import esprit.shahed.database.DatabaseConnection;
-import java.sql.Connection; // Essential import
+import java.sql.Connection;
 
 public class Main {
     public static void main(String[] args) {
-        // Fix: Use the Singleton instance
-        Connection conn = DatabaseConnection.getInstance().getConnection();
+        System.out.println("Initializing System...");
 
+        // 1. Check Database Connection
+        Connection conn = DatabaseConnection.getInstance().getConnection();
         if (conn != null) {
             System.out.println("Success! Database is connected.");
+        } else {
+            System.err.println("Critical Error: Could not connect to the database.");
+            // Optional: System.exit(1); // Stop if DB is down
         }
 
-        MainApp.main(args); // Launch UI
+        // 2. Launch UI directly
+        MainApp.launch(MainApp.class, args);
     }
 }
