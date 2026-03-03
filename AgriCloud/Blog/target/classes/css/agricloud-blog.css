@@ -1,0 +1,300 @@
+/* ============================================================
+   AGRICLOUD BLOG - MODERN REDESIGN
+   Color: Green (#16a34a) - Layout: Real Blog Style
+   ============================================================ */
+
+/* === ROOT & GLOBAL === */
+.root {
+    -fx-font-family: 'Segoe UI', 'Arial', sans-serif;
+    -fx-background-color: #fafafa;
+}
+
+/* === MAIN HEADER === */
+.main-header {
+    -fx-background-color: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+    -fx-padding: 24 40;
+}
+
+.header-title {
+    -fx-font-size: 28;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.header-subtitle {
+    -fx-font-size: 14;
+    -fx-text-fill: rgba(255,255,255,0.9);
+}
+
+/* === TAB PANE === */
+.tab-pane {
+    -fx-background-color: #fafafa;
+}
+
+.tab {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 15;
+    -fx-font-weight: 600;
+    -fx-padding: 14 28;
+}
+
+.tab:selected {
+    -fx-background-color: white;
+    -fx-text-fill: #16a34a;
+    -fx-border-color: #16a34a;
+    -fx-border-width: 0 0 3 0;
+}
+
+/* === BLOG FEED CONTAINER === */
+.blog-feed {
+    -fx-background-color: #fafafa;
+    -fx-padding: 0;
+}
+
+/* === BLOG POST CARD - MAGAZINE STYLE === */
+.post-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 16, 0, 0, 4);
+    -fx-cursor: hand;
+}
+
+.post-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.15), 24, 0, 0, 6);
+    -fx-translate-y: -2;
+}
+
+/* Featured image banner at top */
+.post-image-banner {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 12 12 0 0;
+}
+
+/* Post content area */
+.post-content-area {
+    -fx-padding: 28 32 24 32;
+    -fx-spacing: 16;
+}
+
+/* Post meta (author, date) */
+.post-meta {
+    -fx-spacing: 12;
+}
+
+.author-avatar {
+    -fx-background-radius: 50%;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 1);
+}
+
+.author-name {
+    -fx-font-size: 14;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16a34a;
+}
+
+.post-date {
+    -fx-font-size: 13;
+    -fx-text-fill: #94a3b8;
+}
+
+/* Post title - Large and bold */
+.post-title-text {
+    -fx-font-size: 26;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+    -fx-line-spacing: 4;
+}
+
+/* Post excerpt/preview */
+.post-excerpt {
+    -fx-font-size: 15;
+    -fx-text-fill: #475569;
+    -fx-line-spacing: 6;
+}
+
+/* Post footer */
+.post-footer {
+    -fx-padding: 16 32 20 32;
+    -fx-spacing: 16;
+    -fx-border-color: #f1f5f9;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Tags/categories */
+.post-tag {
+    -fx-background-color: #f0fdf4;
+    -fx-text-fill: #16a34a;
+    -fx-font-size: 12;
+    -fx-font-weight: 600;
+    -fx-padding: 6 12;
+    -fx-background-radius: 16;
+}
+
+/* Read more button */
+.btn-read-more {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-font-size: 14;
+    -fx-font-weight: 600;
+    -fx-padding: 10 24;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.btn-read-more:hover {
+    -fx-background-color: #15803d;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 12, 0, 0, 2);
+}
+
+.sidebar-title {
+    -fx-font-size: 18;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+/* === SEARCH BAR === */
+.search-box {
+    -fx-background-color: white;
+    -fx-background-radius: 24;
+    -fx-padding: 12 20;
+    -fx-font-size: 14;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 24;
+    -fx-border-width: 2;
+}
+
+.search-box:focused {
+    -fx-border-color: #16a34a;
+}
+
+/* === BUTTONS === */
+.btn-primary {
+    -fx-background-color: #16a34a;
+    -fx-text-fill: white;
+    -fx-font-size: 15;
+    -fx-font-weight: 600;
+    -fx-padding: 12 28;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: #15803d;
+}
+
+.btn-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-font-size: 14;
+    -fx-padding: 10 20;
+    -fx-cursor: hand;
+}
+
+.btn-secondary:hover {
+    -fx-border-color: #16a34a;
+    -fx-text-fill: #16a34a;
+}
+
+/* === FORM MODAL === */
+.form-modal {
+    -fx-background-color: rgba(0,0,0,0.4);
+}
+
+.form-container {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-padding: 32;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 40, 0, 0, 10);
+}
+
+.form-title {
+    -fx-font-size: 24;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+.form-label {
+    -fx-font-size: 14;
+    -fx-font-weight: 600;
+    -fx-text-fill: #334155;
+}
+
+.form-input {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-padding: 12 16;
+    -fx-font-size: 14;
+}
+
+.form-input:focused {
+    -fx-border-color: #16a34a;
+}
+
+/* === COMMENTS === */
+.comment-item {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-padding: 16;
+    -fx-border-color: #f1f5f9;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.comment-author {
+    -fx-font-size: 14;
+    -fx-font-weight: 600;
+    -fx-text-fill: #16a34a;
+}
+
+.comment-text {
+    -fx-font-size: 14;
+    -fx-text-fill: #475569;
+    -fx-line-spacing: 4;
+}
+
+/* === STATS BADGE === */
+.stats-badge {
+    -fx-background-color: #f0fdf4;
+    -fx-text-fill: #16a34a;
+    -fx-font-size: 13;
+    -fx-font-weight: 600;
+    -fx-padding: 8 16;
+    -fx-background-radius: 20;
+}
+
+/* === IMAGE UPLOAD === */
+.image-upload-zone {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #cbd5e1;
+    -fx-border-style: dashed;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-padding: 40;
+}
+
+.image-upload-zone:hover {
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: #16a34a;
+}
+
+.image-preview-box {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 8;
+}

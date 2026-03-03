@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="esprit.rania.controller.BlogPostController"
+            prefHeight="640.0" prefWidth="1100.0"
+            styleClass="content-area">
+
+    <top>
+        <VBox spacing="12">
+            <padding><Insets top="16" right="24" bottom="12" left="24"/></padding>
+
+            <!-- Header row -->
+            <HBox alignment="CENTER_LEFT" spacing="14" styleClass="page-header-bar">
+                <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+                <Label text="📰" style="-fx-font-size: 22;"/>
+                <VBox spacing="2">
+                    <Label text="Blog Posts" styleClass="page-header-title"/>
+                    <Label text="Write, manage and explore posts" styleClass="page-header-subtitle"/>
+                </VBox>
+                <Region HBox.hgrow="ALWAYS"/>
+                <HBox styleClass="stats-badge" spacing="6" alignment="CENTER">
+                    <padding><Insets top="6" right="14" bottom="6" left="14"/></padding>
+                    <Label text="Posts:" styleClass="stats-badge-label"/>
+                    <Label fx:id="totalPostsLabel" text="0" styleClass="stats-badge-value"/>
+                </HBox>
+                <Button text="+ New Post" onAction="#handleShowAddForm" styleClass="btn-new-post"/>
+                <Button text="🔄" onAction="#handleRefresh" styleClass="btn-refresh-icon"/>
+            </HBox>
+
+            <!-- Search -->
+            <TextField fx:id="searchField"
+                       promptText="🔍  Search posts by title..."
+                       styleClass="search-field"/>
+        </VBox>
+    </top>
+
+    <!-- MAIN CONTENT AREA (both form and feed) -->
+    <center>
+        <StackPane fx:id="rootStackPane">
+            <!-- Posts Feed (background layer) -->
+            <ScrollPane fx:id="postsScrollPane" fitToWidth="true"
+                        styleClass="posts-scroll" hbarPolicy="NEVER">
+                <VBox fx:id="postsContainer" spacing="16" styleClass="posts-feed">
+                    <padding><Insets top="8" right="24" bottom="24" left="24"/></padding>
+                </VBox>
+            </ScrollPane>
+
+            <!-- Write Form Overlay (foreground layer, hidden by default) -->
+            <VBox fx:id="formPanel" styleClass="form-overlay-container"
+                  visible="false" managed="false"
+                  alignment="TOP_CENTER" StackPane.alignment="TOP_CENTER">
+                <padding><Insets top="20" right="0" bottom="20" left="0"/></padding>
+
+                <!-- Scrollable form card -->
+                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="ALWAYS"
+                            styleClass="form-scroll" maxWidth="900" prefHeight="580">
+                    <VBox spacing="12" styleClass="write-form-panel">
+                        <padding><Insets top="18" right="20" bottom="18" left="20"/></padding>
+
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label fx:id="formTitleLabel" text="✍ Write a New Post"
+                                   styleClass="write-form-title" HBox.hgrow="ALWAYS"/>
+                            <Button text="✕" onAction="#handleCancelForm"
+                                    styleClass="form-close-btn"
+                                    style="-fx-font-size: 18; -fx-padding: 4 10;"/>
+                        </HBox>
+
+                        <Separator style="-fx-background-color: #d1fae5;"/>
+
+                        <HBox spacing="14">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="Title" styleClass="field-label"/>
+                                <TextField fx:id="titleField" promptText="Give your post a great title..." styleClass="text-input"/>
+                            </VBox>
+                            <VBox spacing="5" prefWidth="240">
+                                <Label text="Author" styleClass="field-label"/>
+                                <TextField fx:id="authorField" promptText="Your name" styleClass="text-input"/>
+                            </VBox>
+                        </HBox>
+
+                        <VBox spacing="5">
+                            <Label text="Content" styleClass="field-label"/>
+                            <TextArea fx:id="contentArea"
+                                      promptText="Share your thoughts, ideas, knowledge..."
+                                      wrapText="true" prefRowCount="6"
+                                      styleClass="text-input"/>
+                        </VBox>
+
+                        <!-- Image upload section (compact) -->
+                        <VBox spacing="8">
+                            <Label text="Featured Image (optional)" styleClass="field-label"/>
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Button text="📷  Choose Image" onAction="#handleChooseImage" styleClass="btn-choose-image"/>
+                                <Label fx:id="imageFileLabel" text="No image selected"
+                                       style="-fx-text-fill: #94a3b8; -fx-font-size: 12;"
+                                       HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="removeImageBtn" text="✕"
+                                        onAction="#handleRemoveImage"
+                                        styleClass="btn-remove-image-small"
+                                        visible="false" managed="false"/>
+                            </HBox>
+
+                            <!-- Compact image preview with toggle -->
+                            <VBox fx:id="imagePreviewContainer" spacing="6"
+                                  visible="false" managed="false">
+                                <!-- Preview toggle button -->
+                                <Button fx:id="previewToggleBtn" text="👁 Show Preview"
+                                        onAction="#handleTogglePreview"
+                                        styleClass="btn-toggle-preview"/>
+
+                                <!-- Collapsible preview -->
+                                <StackPane fx:id="imagePreviewBox"
+                                           styleClass="image-preview-container-compact"
+                                           visible="false" managed="false"
+                                           prefHeight="120" maxHeight="120">
+                                    <ImageView fx:id="imagePreview"
+                                               preserveRatio="true"
+                                               fitWidth="200"
+                                               fitHeight="110"/>
+                                </StackPane>
+                            </VBox>
+                        </VBox>
+
+                        <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-padding: 8 0 0 0;">
+                            <Button text="Cancel" onAction="#handleCancelForm" styleClass="btn-clear"/>
+                            <Button fx:id="submitButton" text="Publish Post"
+                                    onAction="#handleSubmitForm" styleClass="btn-publish"/>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+        </StackPane>
+    </center>
+
+</BorderPane>

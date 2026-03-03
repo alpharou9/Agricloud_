@@ -1,0 +1,288 @@
+/* ============================================================
+   AGRICLOUD FARM BLOG - GREEN THEME
+   ============================================================ */
+
+.root {
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+    -fx-background-color: #f0fdf4; /* Very light green background */
+}
+
+/* === HEADER === */
+.page-header-bar {
+    -fx-background-color: linear-gradient(to right, #16a34a, #059669);
+    -fx-background-radius: 12;
+    -fx-padding: 16 24;
+}
+
+.page-header-title {
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.page-header-subtitle {
+    -fx-font-size: 14;
+    -fx-text-fill: rgba(255,255,255,0.9);
+}
+
+/* === BLOG POST CARDS === */
+.blog-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.15), 20, 0, 0, 5);
+}
+
+.blog-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(22,163,74,0.3), 24, 0, 0, 6);
+}
+
+/* === FEATURED IMAGE - FULL WIDTH AT TOP === */
+.post-featured-image-banner {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 16 16 0 0;
+}
+
+/* === POST CONTENT === */
+.post-author-name {
+    -fx-font-size: 15;
+    -fx-font-weight: bold;
+    -fx-text-fill: #16a34a; /* GREEN */
+}
+
+.post-date {
+    -fx-font-size: 13;
+    -fx-text-fill: #64748b;
+}
+
+.post-title {
+    -fx-font-size: 24;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+    -fx-line-spacing: 2;
+}
+
+.post-content-preview {
+    -fx-font-size: 15;
+    -fx-text-fill: #475569;
+    -fx-line-spacing: 4;
+}
+
+/* === BUTTONS === */
+.btn-new-post {
+    -fx-background-color: #16a34a; /* GREEN */
+    -fx-text-fill: white;
+    -fx-font-size: 15;
+    -fx-font-weight: 600;
+    -fx-padding: 12 24;
+    -fx-background-radius: 8;
+}
+
+.btn-new-post:hover {
+    -fx-background-color: #15803d; /* DARKER GREEN */
+}
+
+.card-btn-edit {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-padding: 8 16;
+    -fx-background-radius: 6;
+    -fx-font-size: 13;
+}
+
+.card-btn-delete {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-padding: 8 16;
+    -fx-background-radius: 6;
+    -fx-font-size: 13;
+}
+
+.card-btn-comments {
+    -fx-background-color: #16a34a; /* GREEN */
+    -fx-text-fill: white;
+    -fx-padding: 8 16;
+    -fx-background-radius: 6;
+    -fx-font-size: 13;
+}
+
+/* === STATS BADGE === */
+.stats-badge {
+    -fx-background-color: #dcfce7; /* Light green */
+    -fx-background-radius: 20;
+    -fx-padding: 6 16;
+}
+
+.stats-badge-label {
+    -fx-font-size: 13;
+    -fx-text-fill: #15803d; /* Dark green */
+    -fx-font-weight: 600;
+}
+
+.stats-badge-value {
+    -fx-font-size: 16;
+    -fx-text-fill: #16a34a; /* GREEN */
+    -fx-font-weight: bold;
+}
+
+/* === COMMENT CHIPS === */
+.comment-chip {
+    -fx-background-color: #dcfce7; /* Light green */
+    -fx-text-fill: #15803d; /* Dark green */
+    -fx-padding: 6 12;
+    -fx-background-radius: 16;
+    -fx-font-size: 12;
+    -fx-font-weight: 600;
+}
+
+.post-id-chip {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #64748b;
+    -fx-padding: 6 12;
+    -fx-background-radius: 16;
+    -fx-font-size: 12;
+}
+
+/* === SEARCH === */
+.search-field {
+    -fx-background-color: white;
+    -fx-background-radius: 24;
+    -fx-padding: 12 20;
+    -fx-border-color: #d1fae5; /* Light green border */
+    -fx-border-radius: 24;
+    -fx-border-width: 2;
+}
+
+.search-field:focused {
+    -fx-border-color: #16a34a; /* GREEN when focused */
+}
+
+/* === FORM === */
+.write-form-panel {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #16a34a; /* GREEN border */
+    -fx-border-width: 3;
+    -fx-border-radius: 12;
+    -fx-padding: 24;
+}
+
+.write-form-title {
+    -fx-font-size: 22;
+    -fx-font-weight: bold;
+    -fx-text-fill: #16a34a; /* GREEN */
+}
+
+.field-label {
+    -fx-font-size: 14;
+    -fx-font-weight: 600;
+    -fx-text-fill: #334155;
+}
+
+.text-input {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8;
+    -fx-border-width: 2;
+    -fx-padding: 10 14;
+}
+
+.text-input:focused {
+    -fx-border-color: #16a34a; /* GREEN when focused */
+}
+
+.btn-publish {
+    -fx-background-color: #16a34a; /* GREEN */
+    -fx-text-fill: white;
+    -fx-font-size: 15;
+    -fx-font-weight: 600;
+    -fx-padding: 12 28;
+    -fx-background-radius: 8;
+}
+
+.btn-publish:hover {
+    -fx-background-color: #15803d;
+}
+
+.btn-clear {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-padding: 12 28;
+}
+
+/* === TABS === */
+.tab-pane {
+    -fx-background-color: #f0fdf4; /* Light green background */
+}
+
+.tab {
+    -fx-background-color: transparent;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 15;
+    -fx-padding: 12 24;
+}
+
+.tab:selected {
+    -fx-background-color: white;
+    -fx-text-fill: #16a34a; /* GREEN */
+    -fx-border-color: #16a34a; /* GREEN */
+    -fx-border-width: 0 0 3 0;
+}
+
+/* === COMMENTS === */
+.comments-section {
+    -fx-background-color: #f0fdf4; /* Light green */
+    -fx-padding: 20;
+    -fx-background-radius: 0 0 16 16;
+}
+
+.comment-bubble {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 12 16;
+    -fx-border-color: #d1fae5; /* Light green border */
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+}
+
+/* === SCROLLBAR GREEN === */
+.scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: #16a34a; /* GREEN scrollbar */
+}
+
+/* === IMAGE UPLOAD === */
+.btn-choose-image {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+    -fx-font-size: 14;
+}
+
+.image-preview-container-compact {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #16a34a; /* GREEN border */
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-padding: 8;
+}
+
+/* === TRANSLATE BUTTON === */
+.btn-translate {
+    -fx-background-color: #16a34a; /* GREEN */
+    -fx-text-fill: white;
+    -fx-padding: 8 16;
+    -fx-background-radius: 6;
+    -fx-font-size: 13;
+    -fx-font-weight: 600;
+}
+
+.btn-translate:hover {
+    -fx-background-color: #15803d; /* DARKER GREEN */
+}
+
+.btn-translate .label {
+    -fx-text-fill: white;
+}
