@@ -71,7 +71,7 @@
                         <HBox spacing="12" alignment="CENTER_RIGHT">
                             <Label text="Total:" style="-fx-font-size: 13px;"/>
                             <VBox alignment="CENTER_RIGHT" spacing="1">
-                                <Label fx:id="totalLabel" text="$0.00" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2E7D32;"/>
+                                <Label fx:id="totalLabel" text="\$0.00" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2E7D32;"/>
                                 <Label fx:id="totalTndLabel" text="" style="-fx-font-size: 11px; -fx-text-fill: -agri-text-muted;"/>
                             </VBox>
                         </HBox>

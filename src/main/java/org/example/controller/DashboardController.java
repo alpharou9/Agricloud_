@@ -11,6 +11,7 @@ import org.example.model.Product;
 import org.example.service.ExchangeRateService;
 import org.example.service.OrderService;
 import org.example.service.ProductService;
+import org.example.service.WeatherService;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class DashboardController {
     @FXML private Label revenueLabel;
     @FXML private Label dbStatusLabel;
     @FXML private Label rateLabel;
+    @FXML private Label weatherLabel;
     @FXML private VBox  alertsCard;
 
     @FXML private ToggleButton usdBtn;
@@ -34,6 +36,7 @@ public class DashboardController {
     private final ProductService      productService = new ProductService();
     private final OrderService        orderService   = new OrderService();
     private final ExchangeRateService fx             = ExchangeRateService.getInstance();
+    private final WeatherService      weather        = WeatherService.getInstance();
 
     private static final int LOW_STOCK_THRESHOLD = 5;
 
@@ -52,6 +55,7 @@ public class DashboardController {
         loadDbStatus();
         loadLowStockAlerts();
         refreshExchangeRate();
+        refreshWeather();
     }
 
     // -------------------------------------------------------------------------
@@ -69,6 +73,12 @@ public class DashboardController {
 
     private boolean isTnd() {
         return tndBtn != null && tndBtn.isSelected();
+    }
+
+    private void refreshWeather() {
+        if (weatherLabel == null) return;
+        weatherLabel.setText("...");
+        weather.refreshIfNeeded(text -> weatherLabel.setText(text));
     }
 
     private void refreshExchangeRate() {

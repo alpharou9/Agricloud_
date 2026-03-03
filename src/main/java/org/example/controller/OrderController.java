@@ -17,7 +17,10 @@ import org.example.model.Order;
 import org.example.model.OrderDetail;
 import org.example.model.Product;
 import org.example.model.User;
+import javafx.concurrent.Task;
+import org.example.model.Notification;
 import org.example.service.ExchangeRateService;
+import org.example.service.NotificationService;
 import org.example.service.OrderService;
 import org.example.service.ProductService;
 import org.example.service.SmsService;
@@ -102,9 +105,10 @@ public class OrderController {
     // Drawer (edit order)
     private StackPane drawerOverlay;
 
-    private final OrderService   orderService   = new OrderService();
-    private final ProductService productService = new ProductService();
-    private final SmsService     smsService     = new SmsService();
+    private final OrderService        orderService   = new OrderService();
+    private final ProductService      productService = new ProductService();
+    private final SmsService          smsService     = new SmsService();
+    private final NotificationService notifService   = NotificationService.getInstance();
 
     // =========================================================================
     // Initialization
@@ -480,7 +484,6 @@ public class OrderController {
             return;
         }
 
-        // Validate phone number early if SMS is opted in
         boolean wantSms = smsCheckBox.isSelected();
         String  phone   = wantSms ? phoneField.getText().trim() : "";
         if (wantSms && phone.isBlank()) {
@@ -488,15 +491,15 @@ public class OrderController {
             return;
         }
 
-        // Snapshot cart summary for the SMS message (cart cleared after order)
-        int    itemCount  = cartItems.size();
-        double cartTotal  = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
-        String firstItem  = cartItems.get(0).getProduct().getName();
+        // Snapshot everything we need before clearing the cart
+        int    itemCount = cartItems.size();
+        double cartTotal = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
+        String firstItem = cartItems.get(0).getProduct().getName();
 
-        Order order = new Order();
+        Order meta = new Order();
         String notes = notesField.getText() == null ? "" : notesField.getText().trim();
-        order.setNotes(notes.isBlank() ? null : notes);
-        order.setDeliveryDate(deliveryDatePicker.getValue());
+        meta.setNotes(notes.isBlank() ? null : notes);
+        meta.setDeliveryDate(deliveryDatePicker.getValue());
 
         List<OrderDetail> details = new ArrayList<>();
         for (CartItem ci : cartItems) {
@@ -506,8 +509,20 @@ public class OrderController {
             details.add(d);
         }
 
-        try {
-            orderService.createOrder(order, details, UserSession.getInstance().getCurrentUser());
+        User requester = UserSession.getInstance().getCurrentUser();
+
+        // ── Run all DB work on a background thread (no UI freeze) ───────────
+        Task<List<Order>> task = new Task<>() {
+            @Override
+            protected List<Order> call() throws Exception {
+                return orderService.createOrder(meta, details, requester);
+            }
+        };
+
+        task.setOnSucceeded(e -> {
+            List<Order> inserted = task.getValue();
+
+            // Clear cart / form immediately — UI feels instant
             cartItems.clear();
             updateTotals();
             notesField.clear();
@@ -516,40 +531,59 @@ public class OrderController {
             loadOrderPage();
             if (mainController != null) mainController.notifyProductsChanged();
 
-            // ── SMS notification (best-effort – order is already saved) ────────
+            // Push in-app notifications (non-blocking: DB insert is background)
+            for (Order row : inserted) {
+                Notification n = new Notification(
+                        Notification.Type.ORDER_STATUS,
+                        "Order Placed",
+                        "Order #" + row.getId() + " for "
+                                + (row.getProductName() != null ? row.getProductName() : "product")
+                                + " is now pending.",
+                        row.getId(), "ORDER");
+                notifService.push(n);
+            }
+
+            // SMS in background (never blocks UI)
             if (wantSms) {
-                trySendSms(phone, itemCount, firstItem, cartTotal);
+                trySendSmsAsync(phone, itemCount, firstItem, cartTotal);
             } else {
                 MainApp.getInstance().showToast("Order placed successfully!", "success");
             }
+        });
 
-        } catch (Exception e) {
-            orderFormError.setText(e.getMessage());
-        }
+        task.setOnFailed(e -> orderFormError.setText(
+                task.getException() != null ? task.getException().getMessage() : "Order failed."));
+
+        Thread t = new Thread(task, "place-order");
+        t.setDaemon(true);
+        t.start();
     }
 
-    /**
-     * Sends an SMS confirmation. If it fails the order is NOT rolled back;
-     * the user sees a warning toast instead.
-     */
-    private void trySendSms(String phone, int itemCount, String firstItem, double total) {
+    /** SMS call is blocking HTTP — run it on a daemon thread. */
+    private void trySendSmsAsync(String phone, int itemCount, String firstItem, double total) {
         String extra = itemCount > 1 ? " (+" + (itemCount - 1) + " more)" : "";
         String msg = "AgriCloud Order Confirmed!\n"
                 + "Product: " + firstItem + extra + "\n"
                 + "Total: $" + String.format("%.2f", total) + "\n"
                 + "Status: Pending\n"
                 + "Thank you for your order!";
-        try {
-            smsService.send(phone, msg);
-            String toast = smsService.isDemo()
-                    ? "Order saved \u2705 SMS sent (demo)"
-                    : "Order placed & SMS sent to " + phone + "!";
-            MainApp.getInstance().showToast(toast, "success");
-        } catch (Exception smsEx) {
-            System.err.println("[SMS] Failed: " + smsEx.getMessage());
-            MainApp.getInstance().showToast(
-                    "Order saved, but SMS failed: " + smsEx.getMessage(), "error");
-        }
+        Thread t = new Thread(() -> {
+            try {
+                smsService.send(phone, msg);
+                String toast = smsService.isDemo()
+                        ? "Order saved \u2705 SMS sent (demo)"
+                        : "Order placed & SMS sent to " + phone + "!";
+                javafx.application.Platform.runLater(
+                        () -> MainApp.getInstance().showToast(toast, "success"));
+            } catch (Exception smsEx) {
+                System.err.println("[SMS] Failed: " + smsEx.getMessage());
+                javafx.application.Platform.runLater(
+                        () -> MainApp.getInstance().showToast(
+                                "Order saved, but SMS failed: " + smsEx.getMessage(), "error"));
+            }
+        }, "sms-send");
+        t.setDaemon(true);
+        t.start();
     }
 
     // =========================================================================

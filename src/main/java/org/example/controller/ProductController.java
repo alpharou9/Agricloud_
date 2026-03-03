@@ -1,11 +1,13 @@
 package org.example.controller;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import org.example.MainApp;
@@ -260,6 +262,8 @@ public class ProductController {
         // ── Action buttons ─────────────────────────────────────────────────────
         HBox actions = new HBox(5);
         actions.setAlignment(Pos.CENTER);
+        // Prevent button clicks from bubbling up to the card's detail-panel handler
+        actions.addEventHandler(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
 
         User user = UserSession.getInstance().getCurrentUser();
         boolean canEditDelete = user.getRole() == User.Role.ADMIN
@@ -294,7 +298,134 @@ public class ProductController {
         }
 
         card.getChildren().addAll(imgBox, name, cat, price, stock, badge, actions);
+
+        // Click anywhere on the card (not on buttons) → show detail panel
+        card.setStyle(card.getStyle() + "-fx-cursor: hand;");
+        card.setOnMouseClicked(e -> openDetailPanel(p));
+
         return card;
+    }
+
+    // -------------------------------------------------------------------------
+    // Product detail panel (read-only overlay)
+    // -------------------------------------------------------------------------
+
+    private void openDetailPanel(Product p) {
+        StackPane overlay = new StackPane();
+        overlay.setStyle("-fx-background-color: rgba(0,0,0,0.4);");
+        overlay.setAlignment(Pos.CENTER_RIGHT);
+        overlay.setOnMouseClicked(e -> {
+            if (e.getTarget() == overlay) rootStack.getChildren().remove(overlay);
+        });
+
+        ScrollPane scroll = new ScrollPane();
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setMaxWidth(400);
+        scroll.setPrefWidth(400);
+        scroll.setMaxHeight(Double.MAX_VALUE);
+        scroll.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-background-radius: 8;" +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 24, 0, -4, 0);");
+
+        VBox panel = new VBox(14);
+        panel.setPadding(new Insets(24));
+        panel.setStyle("-fx-background-color: white; -fx-background-radius: 8;");
+
+        // ── Header ─────────────────────────────────────────────────────────
+        HBox header = new HBox(8);
+        header.setAlignment(Pos.CENTER_LEFT);
+        Label title = new Label("Product Details");
+        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Region sp = new Region();
+        HBox.setHgrow(sp, Priority.ALWAYS);
+        Button closeBtn = new Button("✕");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-font-size: 16px; -fx-cursor: hand; -fx-padding: 0 4;");
+        closeBtn.setOnAction(e -> rootStack.getChildren().remove(overlay));
+        header.getChildren().addAll(title, sp, closeBtn);
+
+        // ── Image ───────────────────────────────────────────────────────────
+        StackPane imgBox = new StackPane();
+        imgBox.setPrefHeight(160);
+        imgBox.setMaxWidth(Double.MAX_VALUE);
+        imgBox.setStyle("-fx-background-color: #F5F5F5; -fx-background-radius: 8;");
+        File imgFile = (p.getImage() != null && !p.getImage().isBlank())
+                ? new File(p.getImage()) : null;
+        if (imgFile != null && imgFile.exists()) {
+            ImageView iv = new ImageView(
+                    new Image(imgFile.toURI().toString(), 350, 160, true, true));
+            iv.setFitWidth(350);
+            iv.setFitHeight(160);
+            iv.setPreserveRatio(true);
+            imgBox.getChildren().add(iv);
+        } else {
+            Label emoji = new Label(categoryEmoji(p.getCategory()));
+            emoji.setStyle("-fx-font-size: 64px;");
+            imgBox.getChildren().add(emoji);
+        }
+
+        // ── Status badge ────────────────────────────────────────────────────
+        Label badge = new Label(p.getStatus() != null ? p.getStatus().toUpperCase() : "");
+        badge.getStyleClass().addAll("status-badge", "status-" + p.getStatus());
+
+        // ── Detail rows ─────────────────────────────────────────────────────
+        VBox details = new VBox(10);
+        details.getChildren().addAll(
+            detailRow("Name",        p.getName()),
+            detailRow("Category",    p.getCategory() != null ? p.getCategory() : "—"),
+            detailRow("Price",       String.format("$%.2f / %s", p.getPrice(), p.getUnit())),
+            detailRow("Stock",       p.getQuantity() + " " + p.getUnit()
+                                     + (p.getQuantity() <= LOW_STOCK_THRESHOLD && p.getQuantity() > 0 ? "  ⚠ Low" : ""))
+        );
+
+        if (p.getDescription() != null && !p.getDescription().isBlank()) {
+            Label descLbl  = new Label("Description");
+            descLbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #9E9E9E;");
+            Label descVal  = new Label(p.getDescription());
+            descVal.setWrapText(true);
+            descVal.setStyle("-fx-font-size: 13px;");
+            details.getChildren().addAll(descLbl, descVal);
+        }
+
+        if (p.getCreatedAt() != null) {
+            details.getChildren().add(
+                detailRow("Added", p.getCreatedAt().toLocalDate().toString()));
+        }
+
+        // ── Actions (Edit shortcut) ──────────────────────────────────────────
+        HBox footerBtns = new HBox(8);
+        footerBtns.setAlignment(Pos.CENTER_RIGHT);
+        User user = UserSession.getInstance().getCurrentUser();
+        boolean canEdit = user.getRole() == User.Role.ADMIN || p.getUserId() == user.getId();
+        if (canEdit) {
+            Button editBtn = new Button("Edit Product");
+            editBtn.getStyleClass().add("btn-primary");
+            editBtn.setOnAction(e -> {
+                rootStack.getChildren().remove(overlay);
+                openDrawer(p);
+            });
+            footerBtns.getChildren().add(editBtn);
+        }
+        Button dismissBtn = new Button("Close");
+        dismissBtn.getStyleClass().add("btn-secondary");
+        dismissBtn.setOnAction(e -> rootStack.getChildren().remove(overlay));
+        footerBtns.getChildren().add(dismissBtn);
+
+        panel.getChildren().addAll(header, imgBox, badge, details, footerBtns);
+        scroll.setContent(panel);
+        overlay.getChildren().add(scroll);
+        rootStack.getChildren().add(overlay);
+    }
+
+    private Node detailRow(String label, String value) {
+        VBox row = new VBox(2);
+        Label lbl = new Label(label);
+        lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #9E9E9E;");
+        Label val = new Label(value);
+        val.setStyle("-fx-font-size: 13px; -fx-font-weight: bold;");
+        row.getChildren().addAll(lbl, val);
+        return row;
     }
 
     /** Returns a representative emoji for a product category. */

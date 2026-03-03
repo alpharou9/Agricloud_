@@ -22,13 +22,17 @@ public class OrderService {
 
     private final OrderDAO             orderDAO       = new OrderDAO();
     private final ProductService       productService = new ProductService();
-    private final NotificationService  notifService   = new NotificationService();
 
     // =========================================================================
     // Create – one orders row per cart item, all in one transaction
     // =========================================================================
 
-    public void createOrder(Order meta, List<OrderDetail> details, User requester)
+    /**
+     * Creates one orders-row per cart item inside a transaction.
+     * Returns the list of inserted rows so the caller can push
+     * in-app notifications without touching the DB again.
+     */
+    public List<Order> createOrder(Order meta, List<OrderDetail> details, User requester)
             throws Exception {
         if (requester.getRole() != User.Role.FARMER)
             throw new SecurityException("Only farmers can place orders.");
@@ -74,13 +78,7 @@ public class OrderService {
         } finally {
             conn.setAutoCommit(true);
         }
-        // Fire notifications after commit (best-effort, never rolls back the order)
-        for (Order row : insertedRows) {
-            try {
-                Order full = orderDAO.getById(row.getId()); // includes product_name via JOIN
-                if (full != null) notifService.createOrderStatusNotif(full, "pending");
-            } catch (Exception ignored) {}
-        }
+        return insertedRows;
     }
 
     // =========================================================================
@@ -139,7 +137,6 @@ public class OrderService {
 
         order.setStatus(newStatus);
         orderDAO.update(order);
-        try { notifService.createOrderStatusNotif(order, newStatus); } catch (Exception ignored) {}
     }
 
     // =========================================================================
