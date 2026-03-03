@@ -70,32 +70,47 @@
                         <!-- Total row -->
                         <HBox spacing="12" alignment="CENTER_RIGHT">
                             <Label text="Total:" style="-fx-font-size: 13px;"/>
-                            <Label fx:id="totalLabel" text="0.00" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2E7D32;"/>
+                            <VBox alignment="CENTER_RIGHT" spacing="1">
+                                <Label fx:id="totalLabel" text="$0.00" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #2E7D32;"/>
+                                <Label fx:id="totalTndLabel" text="" style="-fx-font-size: 11px; -fx-text-fill: -agri-text-muted;"/>
+                            </VBox>
                         </HBox>
 
-                        <!-- Shipping fields -->
-                        <VBox spacing="4">
-                            <Label text="Shipping Address *"
-                                   style="-fx-font-size: 11px; -fx-text-fill: #757575;"/>
-                            <TextField fx:id="shippingField" promptText="Street address"/>
-                        </VBox>
-                        <HBox spacing="8">
-                            <VBox spacing="4" HBox.hgrow="ALWAYS">
-                                <Label text="City"
-                                       style="-fx-font-size: 11px; -fx-text-fill: #757575;"/>
-                                <TextField fx:id="cityField" promptText="City"/>
-                            </VBox>
-                            <VBox spacing="4">
-                                <Label text="Postal Code"
-                                       style="-fx-font-size: 11px; -fx-text-fill: #757575;"/>
-                                <TextField fx:id="postalField" promptText="Postal" prefWidth="110"/>
-                            </VBox>
+                        <!-- Order info: Notes & Delivery Date -->
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Notes:" style="-fx-font-size: 12px; -fx-min-width: 90;"/>
+                            <TextArea fx:id="notesField"
+                                      promptText="Optional notes for this order…"
+                                      prefRowCount="2"
+                                      wrapText="true"
+                                      HBox.hgrow="ALWAYS"
+                                      style="-fx-font-size: 12px;"/>
                         </HBox>
-                        <VBox spacing="4">
-                            <Label text="Notes"
-                                   style="-fx-font-size: 11px; -fx-text-fill: #757575;"/>
-                            <TextArea fx:id="notesField" promptText="Optional notes"
-                                      prefRowCount="2" wrapText="true"/>
+                        <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Label text="Delivery Date:" style="-fx-font-size: 12px; -fx-min-width: 90;"/>
+                            <DatePicker fx:id="deliveryDatePicker"
+                                        promptText="Pick a date"
+                                        HBox.hgrow="ALWAYS"/>
+                        </HBox>
+
+                        <!-- SMS opt-in -->
+                        <VBox spacing="6"
+                              style="-fx-background-color: #F1F8E9; -fx-background-radius: 6; -fx-padding: 10; -fx-border-color: #C5E1A5; -fx-border-radius: 6; -fx-border-width: 1;">
+                            <CheckBox fx:id="smsCheckBox"
+                                      text="📱 Receive SMS confirmation"
+                                      onAction="#onSmsToggle"
+                                      style="-fx-font-size: 12px; -fx-font-weight: bold;"/>
+                            <HBox spacing="6" alignment="CENTER_LEFT">
+                                <Label text="Phone:"
+                                       style="-fx-font-size: 11px; -fx-text-fill: #555;"/>
+                                <TextField fx:id="phoneField"
+                                           promptText="+213 555 123 456"
+                                           disable="true"
+                                           HBox.hgrow="ALWAYS"
+                                           style="-fx-font-size: 12px;"/>
+                            </HBox>
+                            <Label text="SMS will be sent after your order is confirmed."
+                                   style="-fx-font-size: 10px; -fx-text-fill: #888;"/>
                         </VBox>
 
                         <Label fx:id="orderFormError" text="" wrapText="true"
@@ -137,6 +152,12 @@
                     <Label text="Order Details"
                            style="-fx-font-weight: bold; -fx-font-size: 13px;"/>
                     <TableView fx:id="detailsTable" prefHeight="200"/>
+
+                    <!-- Export -->
+                    <HBox alignment="CENTER_RIGHT">
+                        <Button text="Export PDF" onAction="#onExportPdf"
+                                styleClass="btn-secondary"/>
+                    </HBox>
 
                 </VBox>
             </Tab>

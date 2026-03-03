@@ -2,7 +2,6 @@ package org.example.service;
 
 import org.example.dao.DatabaseConnection;
 import org.example.dao.OrderDAO;
-import org.example.dao.OrderDetailDAO;
 import org.example.model.Order;
 import org.example.model.OrderDetail;
 import org.example.model.Product;
@@ -10,70 +9,63 @@ import org.example.model.User;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Business-logic layer for the Orders module.
+ * Business-logic layer for Orders.
  *
- * Dependency direction:  OrderService → ProductService (stock)
- *                        ProductService has NO knowledge of orders.
- *
- * All multi-step DB operations (create / update / delete) run inside a
- * single JDBC transaction so partial writes never happen.
+ * Each cart item becomes ONE row in the orders table.
+ * No separate order_details table is used.
  */
 public class OrderService {
 
-    private final OrderDAO       orderDAO       = new OrderDAO();
-    private final OrderDetailDAO detailDAO      = new OrderDetailDAO();
-    private final ProductService productService = new ProductService();
+    private final OrderDAO             orderDAO       = new OrderDAO();
+    private final ProductService       productService = new ProductService();
+    private final NotificationService  notifService   = new NotificationService();
 
     // =========================================================================
-    // Create
+    // Create – one orders row per cart item, all in one transaction
     // =========================================================================
 
-    /**
-     * Saves a new multi-product order.
-     * 1. Validates each item (product exists, approved, sufficient stock).
-     * 2. Inserts the order header.
-     * 3. Inserts all detail rows in a batch.
-     * 4. Decrements stock for every product.
-     * Everything runs in one transaction; any failure rolls back completely.
-     */
-    public void createOrder(Order order, List<OrderDetail> details, User requester)
+    public void createOrder(Order meta, List<OrderDetail> details, User requester)
             throws Exception {
-        if (requester.getRole() != User.Role.FARMER) {
+        if (requester.getRole() != User.Role.FARMER)
             throw new SecurityException("Only farmers can place orders.");
-        }
-        if (details == null || details.isEmpty()) {
+        if (details == null || details.isEmpty())
             throw new Exception("Please add at least one product to the order.");
-        }
 
-        // Validate & price each item
-        double total = 0;
+        // Validate all items first
         for (OrderDetail d : details) {
             Product p = productService.getProductById(d.getProductId());
-            if (p == null) throw new Exception("Product not found (id=" + d.getProductId() + ").");
-            if (!"approved".equals(p.getStatus()))
-                throw new Exception("'" + p.getName() + "' is not available for ordering.");
+            if (p == null)
+                throw new Exception("Product not found (id=" + d.getProductId() + ").");
+            if ("rejected".equals(p.getStatus()))
+                throw new Exception("'" + p.getName() + "' has been rejected and cannot be ordered.");
             if (p.getQuantity() < d.getQuantity())
                 throw new Exception("Insufficient stock for '" + p.getName() +
                         "'. Available: " + p.getQuantity() + ", requested: " + d.getQuantity() + ".");
             d.setUnitPrice(p.getPrice());
             d.setSubtotal(p.getPrice() * d.getQuantity());
-            total += d.getSubtotal();
         }
-
-        order.setCustomerId(requester.getId());
-        order.setTotalPrice(total);
-        order.setStatus("pending");
 
         Connection conn = DatabaseConnection.getConnection();
         conn.setAutoCommit(false);
+        List<Order> insertedRows = new ArrayList<>();
         try {
-            orderDAO.insert(order);                          // sets order.id
-            detailDAO.insertAll(order.getId(), details);
             for (OrderDetail d : details) {
+                Order row = new Order();
+                row.setCustomerId(requester.getId());
+                row.setProductId(d.getProductId());
+                row.setQuantity(d.getQuantity());
+                row.setUnitPrice(d.getUnitPrice());
+                row.setTotalPrice(d.getSubtotal());
+                row.setStatus("pending");
+                row.setNotes(meta.getNotes());
+                row.setDeliveryDate(meta.getDeliveryDate());
+                orderDAO.insert(row);  // sets row.id from generated key
                 productService.decrementStock(d.getProductId(), d.getQuantity());
+                insertedRows.add(row);
             }
             conn.commit();
         } catch (Exception e) {
@@ -82,63 +74,49 @@ public class OrderService {
         } finally {
             conn.setAutoCommit(true);
         }
+        // Fire notifications after commit (best-effort, never rolls back the order)
+        for (Order row : insertedRows) {
+            try {
+                Order full = orderDAO.getById(row.getId()); // includes product_name via JOIN
+                if (full != null) notifService.createOrderStatusNotif(full, "pending");
+            } catch (Exception ignored) {}
+        }
     }
 
     // =========================================================================
     // Update
     // =========================================================================
 
-    /**
-     * Replaces the items of an existing order and recalculates the total.
-     * Stock for the old items is restored first, then consumed by the new items.
-     * Only the order owner (farmer) or an admin may call this.
-     */
+    /** Updates status (and optionally product/quantity if the edit drawer changes them). */
     public void updateOrder(Order order, List<OrderDetail> newDetails, User requester)
             throws Exception {
         Order existing = orderDAO.getById(order.getId());
         if (existing == null) throw new Exception("Order not found.");
         if (requester.getRole() == User.Role.FARMER &&
-                existing.getCustomerId() != requester.getId()) {
+                existing.getCustomerId() != requester.getId())
             throw new SecurityException("Farmers can only edit their own orders.");
-        }
-        if (newDetails == null || newDetails.isEmpty()) {
-            throw new Exception("An order must have at least one product.");
-        }
 
-        // Validate & price new items
-        double total = 0;
-        for (OrderDetail d : newDetails) {
-            Product p = productService.getProductById(d.getProductId());
-            if (p == null) throw new Exception("Product not found (id=" + d.getProductId() + ").");
-            d.setUnitPrice(p.getPrice());
-            d.setSubtotal(p.getPrice() * d.getQuantity());
-            total += d.getSubtotal();
-        }
-
-        List<OrderDetail> oldDetails = detailDAO.getByOrderId(order.getId());
+        boolean active = !("cancelled".equals(existing.getStatus()) ||
+                           "delivered".equals(existing.getStatus()));
 
         Connection conn = DatabaseConnection.getConnection();
         conn.setAutoCommit(false);
         try {
-            // 1. Restore stock for old items (if order is still active)
-            boolean active = !("cancelled".equals(existing.getStatus()) ||
-                               "delivered".equals(existing.getStatus()));
-            if (active) {
-                for (OrderDetail old : oldDetails) {
-                    productService.incrementStock(old.getProductId(), old.getQuantity());
+            // If new items provided, take the first one as the replacement product
+            if (newDetails != null && !newDetails.isEmpty()) {
+                OrderDetail nd = newDetails.get(0);
+                Product p = productService.getProductById(nd.getProductId());
+                if (p != null) {
+                    if (active && existing.getProductId() > 0)
+                        productService.incrementStock(existing.getProductId(), existing.getQuantity());
+                    order.setProductId(nd.getProductId());
+                    order.setQuantity(nd.getQuantity());
+                    order.setUnitPrice(p.getPrice());
+                    order.setTotalPrice(p.getPrice() * nd.getQuantity());
+                    if (active)
+                        productService.decrementStock(nd.getProductId(), nd.getQuantity());
                 }
             }
-            // 2. Delete old detail rows and insert new ones
-            detailDAO.deleteByOrderId(order.getId());
-            detailDAO.insertAll(order.getId(), newDetails);
-            // 3. Decrement stock for new items
-            if (active) {
-                for (OrderDetail d : newDetails) {
-                    productService.decrementStock(d.getProductId(), d.getQuantity());
-                }
-            }
-            // 4. Update order header
-            order.setTotalPrice(total);
             orderDAO.update(order);
             conn.commit();
         } catch (Exception e) {
@@ -149,12 +127,6 @@ public class OrderService {
         }
     }
 
-    /**
-     * Updates only the order status.
-     * If transitioning TO 'cancelled', stock is restored.
-     * If transitioning FROM 'cancelled' to an active status, stock is NOT re-consumed
-     * (admin responsibility to verify availability first).
-     */
     public void updateOrderStatus(long orderId, String newStatus, User requester)
             throws Exception {
         Order order = orderDAO.getById(orderId);
@@ -162,38 +134,30 @@ public class OrderService {
 
         boolean wasFinal = "cancelled".equals(order.getStatus()) ||
                            "delivered".equals(order.getStatus());
-
-        if ("cancelled".equals(newStatus) && !wasFinal) {
-            List<OrderDetail> details = detailDAO.getByOrderId(orderId);
-            for (OrderDetail d : details) {
-                productService.incrementStock(d.getProductId(), d.getQuantity());
-            }
-        }
+        if ("cancelled".equals(newStatus) && !wasFinal && order.getProductId() > 0)
+            productService.incrementStock(order.getProductId(), order.getQuantity());
 
         order.setStatus(newStatus);
         orderDAO.update(order);
+        try { notifService.createOrderStatusNotif(order, newStatus); } catch (Exception ignored) {}
     }
 
     // =========================================================================
     // Cancel / Delete
     // =========================================================================
 
-    /** Cancels an order and restores stock (unless already delivered/cancelled). */
     public void cancelOrder(long orderId, User requester) throws Exception {
         Order order = orderDAO.getById(orderId);
         if (order == null) throw new Exception("Order not found.");
         if (requester.getRole() == User.Role.FARMER &&
-                order.getCustomerId() != requester.getId()) {
+                order.getCustomerId() != requester.getId())
             throw new SecurityException("Farmers can only cancel their own orders.");
-        }
         updateOrderStatus(orderId, "cancelled", requester);
     }
 
-    /** Hard-deletes an order (admin only). Restores stock if the order was still active. */
     public void deleteOrder(long orderId, User requester) throws Exception {
-        if (requester.getRole() != User.Role.ADMIN) {
+        if (requester.getRole() != User.Role.ADMIN)
             throw new SecurityException("Only admins can permanently delete orders.");
-        }
         Order order = orderDAO.getById(orderId);
         if (order == null) return;
 
@@ -202,13 +166,9 @@ public class OrderService {
         Connection conn = DatabaseConnection.getConnection();
         conn.setAutoCommit(false);
         try {
-            if (active) {
-                List<OrderDetail> details = detailDAO.getByOrderId(orderId);
-                for (OrderDetail d : details) {
-                    productService.incrementStock(d.getProductId(), d.getQuantity());
-                }
-            }
-            orderDAO.delete(orderId);   // CASCADE deletes order_details rows
+            if (active && order.getProductId() > 0)
+                productService.incrementStock(order.getProductId(), order.getQuantity());
+            orderDAO.delete(orderId);
             conn.commit();
         } catch (Exception e) {
             conn.rollback();
@@ -222,40 +182,38 @@ public class OrderService {
     // Queries
     // =========================================================================
 
-    public List<Order> getAllOrders() throws SQLException { return orderDAO.getAll(); }
+    public List<Order> getAllOrders() throws SQLException    { return orderDAO.getAll(); }
+    public List<Order> getFarmerOrders(long id) throws SQLException { return orderDAO.getByCustomerId(id); }
 
-    public List<Order> getFarmerOrders(long farmerId) throws SQLException {
-        return orderDAO.getByCustomerId(farmerId);
+    public List<Order> getAllOrdersPage(int size, int offset) throws SQLException {
+        return orderDAO.getPage(size, offset);
+    }
+    public List<Order> getFarmerOrdersPage(long id, int size, int offset) throws SQLException {
+        return orderDAO.getPageByCustomer(id, size, offset);
     }
 
-    // ── Paginated ──────────────────────────────────────────────────────────
+    public int countAllOrders() throws SQLException         { return orderDAO.countAll(); }
+    public int countFarmerOrders(long id) throws SQLException { return orderDAO.countByCustomer(id); }
 
-    public List<Order> getAllOrdersPage(int pageSize, int offset) throws SQLException {
-        return orderDAO.getPage(pageSize, offset);
-    }
-
-    public List<Order> getFarmerOrdersPage(long farmerId, int pageSize, int offset)
-            throws SQLException {
-        return orderDAO.getPageByCustomer(farmerId, pageSize, offset);
-    }
-
-    public int countAllOrders() throws SQLException    { return orderDAO.countAll(); }
-
-    public int countFarmerOrders(long farmerId) throws SQLException {
-        return orderDAO.countByCustomer(farmerId);
-    }
-
-    // ── Detail / stats ─────────────────────────────────────────────────────
-
+    /**
+     * Returns the product details of a single order as a one-item list,
+     * so the existing details TableView still works without changes.
+     */
     public List<OrderDetail> getOrderDetails(long orderId) throws SQLException {
-        return detailDAO.getByOrderId(orderId);
+        Order o = orderDAO.getById(orderId);
+        if (o == null) return new ArrayList<>();
+        OrderDetail d = new OrderDetail();
+        d.setOrderId(orderId);
+        d.setProductId(o.getProductId());
+        d.setProductName(o.getProductName() != null ? o.getProductName() : "Unknown");
+        d.setProductUnit(o.getProductUnit());
+        d.setProductImage(o.getProductImage());
+        d.setQuantity(o.getQuantity());
+        d.setUnitPrice(o.getUnitPrice());
+        d.setSubtotal(o.getTotalPrice());
+        return List.of(d);
     }
 
-    public int getActiveOrderCount() throws SQLException {
-        return orderDAO.getActiveOrderCount();
-    }
-
-    public double getTotalRevenue() throws SQLException {
-        return orderDAO.getTotalRevenue();
-    }
+    public int getActiveOrderCount() throws SQLException  { return orderDAO.getActiveOrderCount(); }
+    public double getTotalRevenue()  throws SQLException  { return orderDAO.getTotalRevenue(); }
 }

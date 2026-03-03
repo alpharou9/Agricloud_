@@ -166,6 +166,21 @@ public class ProductService {
         return productDAO.countApproved(search);
     }
 
+    /**
+     * All in-stock, non-rejected products for the order catalog.
+     * Returns both 'approved' and 'pending' products so customers always
+     * see the full catalog; pending ones are shown but cannot be ordered.
+     */
+    public List<Product> getCatalogPage(String search, int pageSize, int offset)
+            throws SQLException {
+        return productDAO.getCatalogPage(search, pageSize, offset);
+    }
+
+    /** Count for pagination of the order catalog. */
+    public int countCatalog(String search) throws SQLException {
+        return productDAO.countCatalog(search);
+    }
+
     public List<Product> getLowStockProducts(int threshold) throws SQLException {
         return productDAO.getLowStockProducts(threshold);
     }

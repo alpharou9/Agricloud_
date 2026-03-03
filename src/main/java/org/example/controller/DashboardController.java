@@ -2,10 +2,13 @@ package org.example.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.VBox;
 import org.example.MainApp;
 import org.example.dao.DatabaseConnection;
 import org.example.model.Product;
+import org.example.service.ExchangeRateService;
 import org.example.service.OrderService;
 import org.example.service.ProductService;
 
@@ -21,12 +24,21 @@ public class DashboardController {
     @FXML private Label orderCountLabel;
     @FXML private Label revenueLabel;
     @FXML private Label dbStatusLabel;
+    @FXML private Label rateLabel;
     @FXML private VBox  alertsCard;
 
-    private final ProductService productService = new ProductService();
-    private final OrderService   orderService   = new OrderService();
+    @FXML private ToggleButton usdBtn;
+    @FXML private ToggleButton tndBtn;
+    @FXML private ToggleGroup  currencyGroup;
+
+    private final ProductService      productService = new ProductService();
+    private final OrderService        orderService   = new OrderService();
+    private final ExchangeRateService fx             = ExchangeRateService.getInstance();
 
     private static final int LOW_STOCK_THRESHOLD = 5;
+
+    /** Last loaded revenue (USD) so we can reformat on toggle without a DB round-trip. */
+    private double lastRevenueUsd = 0;
 
     @FXML
     public void initialize() {
@@ -39,6 +51,45 @@ public class DashboardController {
         loadRevenue();
         loadDbStatus();
         loadLowStockAlerts();
+        refreshExchangeRate();
+    }
+
+    // -------------------------------------------------------------------------
+    // Currency toggle
+    // -------------------------------------------------------------------------
+
+    @FXML
+    void onCurrencyToggle() {
+        // Prevent deselecting both buttons
+        if (currencyGroup.getSelectedToggle() == null) {
+            usdBtn.setSelected(true);
+        }
+        updateRevenueLabel();
+    }
+
+    private boolean isTnd() {
+        return tndBtn != null && tndBtn.isSelected();
+    }
+
+    private void refreshExchangeRate() {
+        fx.refreshIfNeeded(rate -> {
+            updateRevenueLabel();
+            if (fx.isStale()) {
+                rateLabel.setText("⚠ Offline rate (1 USD ≈ " + String.format("%.4f", rate) + " TND)");
+                rateLabel.setStyle("-fx-text-fill: #FB8C00; -fx-font-size: 11px;");
+            } else {
+                rateLabel.setText("1 USD = " + String.format("%.4f", rate) + " TND");
+                rateLabel.setStyle("-fx-text-fill: -agri-text-muted; -fx-font-size: 11px;");
+            }
+        });
+    }
+
+    private void updateRevenueLabel() {
+        if (isTnd()) {
+            revenueLabel.setText(fx.formatTnd(lastRevenueUsd));
+        } else {
+            revenueLabel.setText(String.format("$%.2f", lastRevenueUsd));
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -63,8 +114,8 @@ public class DashboardController {
 
     private void loadRevenue() {
         try {
-            double rev = orderService.getTotalRevenue();
-            revenueLabel.setText(String.format("$%.2f", rev));
+            lastRevenueUsd = orderService.getTotalRevenue();
+            updateRevenueLabel();
         } catch (Exception e) {
             revenueLabel.setText("Error");
         }
@@ -82,7 +133,6 @@ public class DashboardController {
     }
 
     private void loadLowStockAlerts() {
-        // Remove old alert rows (keep the title label at index 0)
         alertsCard.getChildren().removeIf(n -> n instanceof Label lbl
                 && lbl.getStyleClass().contains("alert-row"));
         try {

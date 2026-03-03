@@ -17,14 +17,25 @@ import org.example.model.Order;
 import org.example.model.OrderDetail;
 import org.example.model.Product;
 import org.example.model.User;
+import org.example.service.ExchangeRateService;
 import org.example.service.OrderService;
 import org.example.service.ProductService;
+import org.example.service.SmsService;
 import org.example.session.UserSession;
 
 import java.io.File;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.scene.input.MouseEvent;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 /**
  * Controller for orders-view.fxml.
@@ -51,12 +62,13 @@ public class OrderController {
 
     // ── Tab 1: cart ──
     @FXML private TableView<CartItem> cartTable;
-    @FXML private Label     totalLabel;
-    @FXML private TextField shippingField;
-    @FXML private TextField cityField;
-    @FXML private TextField postalField;
-    @FXML private TextArea  notesField;
-    @FXML private Label     orderFormError;
+    @FXML private Label      totalLabel;
+    @FXML private Label      totalTndLabel;
+    @FXML private TextArea   notesField;
+    @FXML private DatePicker deliveryDatePicker;
+    @FXML private CheckBox   smsCheckBox;
+    @FXML private TextField  phoneField;
+    @FXML private Label      orderFormError;
 
     // ── Tab 2: dashboard ──
     @FXML private TableView<Order>       ordersTable;
@@ -92,6 +104,7 @@ public class OrderController {
 
     private final OrderService   orderService   = new OrderService();
     private final ProductService productService = new ProductService();
+    private final SmsService     smsService     = new SmsService();
 
     // =========================================================================
     // Initialization
@@ -150,17 +163,27 @@ public class OrderController {
     private void loadProductPage() {
         String search = searchField == null ? "" : searchField.getText().trim();
         try {
-            int total = productService.countApprovedProducts(search);
+            int total = productService.countCatalog(search);
             productTotalPages = Math.max(1, (int) Math.ceil((double) total / PRODUCT_PAGE_SIZE));
             if (productPage >= productTotalPages) productPage = productTotalPages - 1;
 
-            List<Product> products = productService.getApprovedProductsPage(
+            List<Product> products = productService.getCatalogPage(
                     search, PRODUCT_PAGE_SIZE, productPage * PRODUCT_PAGE_SIZE);
 
             productGrid.getChildren().clear();
             if (products.isEmpty()) {
-                Label empty = new Label("No products available.");
-                empty.setStyle("-fx-text-fill: #757575; -fx-font-size: 13px;");
+                VBox empty = new VBox(8);
+                empty.setAlignment(Pos.CENTER);
+                empty.setPadding(new Insets(40));
+                Label icon = new Label("🛒");
+                icon.setStyle("-fx-font-size: 40px;");
+                Label msg = new Label(search.isEmpty()
+                        ? "No products available yet.\nAdd products from the Products page."
+                        : "No products match \"" + search + "\".");
+                msg.setStyle("-fx-text-fill: #757575; -fx-font-size: 13px; -fx-text-alignment: center;");
+                msg.setWrapText(true);
+                msg.setMaxWidth(300);
+                empty.getChildren().addAll(icon, msg);
                 productGrid.getChildren().add(empty);
             } else {
                 for (Product p : products) {
@@ -172,6 +195,8 @@ public class OrderController {
             nextProductBtn.setDisable(productPage >= productTotalPages - 1);
 
         } catch (Exception e) {
+            System.err.println("[OrderController] loadProductPage error: " + e.getMessage());
+            e.printStackTrace();
             MainApp.getInstance().showToast("Failed to load products: " + e.getMessage(), "error");
         }
     }
@@ -182,83 +207,116 @@ public class OrderController {
 
     // ── Product card ─────────────────────────────────────────────────────────
 
-    private static final String CARD_STYLE_BASE =
-            "-fx-background-color: white;" +
-            "-fx-background-radius: 8;" +
-            "-fx-border-color: #E0E0E0;" +
-            "-fx-border-radius: 8;" +
-            "-fx-padding: 10;";
-    private static final String CARD_STYLE_HOVER =
-            "-fx-background-color: white;" +
-            "-fx-background-radius: 8;" +
-            "-fx-border-color: #4CAF50;" +
-            "-fx-border-radius: 8;" +
-            "-fx-padding: 10;";
+    private static final int CARD_W   = 185;
+    private static final int CARD_IMG = 120;
 
     private Node createProductCard(Product p) {
-        VBox card = new VBox(6);
-        card.setAlignment(Pos.TOP_CENTER);
-        card.setPrefWidth(155);
-        card.setStyle(CARD_STYLE_BASE);
+        // A product is orderable if it has stock (rejected products never reach
+        // this method – the catalog query excludes them).
+        boolean orderable = p.getQuantity() > 0;
+        boolean pending   = "pending".equals(p.getStatus());
 
-        // Clicking anywhere on the card adds the product to the cart
-        if (p.getQuantity() > 0) {
-            card.setCursor(javafx.scene.Cursor.HAND);
+        // ── Root card ────────────────────────────────────────────────────────
+        VBox card = new VBox(0);
+        card.getStyleClass().add("product-card");
+        card.setPrefWidth(CARD_W);
+        card.setMinWidth(CARD_W);
+        card.setMaxWidth(CARD_W);
+
+        if (orderable) {
             card.setOnMouseClicked(e -> onAddToCart(p));
-            card.setOnMouseEntered(e -> card.setStyle(CARD_STYLE_HOVER));
-            card.setOnMouseExited(e -> card.setStyle(CARD_STYLE_BASE));
+            card.setOnMouseEntered(e -> card.getStyleClass().add("product-card-selected"));
+            card.setOnMouseExited(e -> card.getStyleClass().remove("product-card-selected"));
+        } else {
+            card.setOpacity(0.6);
         }
 
-        // Thumbnail
-        StackPane imgBox = new StackPane();
-        imgBox.setPrefSize(135, 85);
-        imgBox.setStyle("-fx-background-color: #F5F5F5; -fx-background-radius: 6;");
+        // ── Image / icon area ────────────────────────────────────────────────
+        StackPane imgArea = new StackPane();
+        imgArea.getStyleClass().add("product-card-image");
+        imgArea.setPrefHeight(CARD_IMG);
+        imgArea.setMinHeight(CARD_IMG);
+        imgArea.setMaxHeight(CARD_IMG);
+        imgArea.setPrefWidth(CARD_W);
+
         if (p.getImage() != null && !p.getImage().isBlank()) {
             File f = new File(p.getImage());
             if (f.exists()) {
                 ImageView iv = new ImageView(
-                        new Image(f.toURI().toString(), 135, 85, true, true));
-                iv.setFitWidth(135);
-                iv.setFitHeight(85);
+                        new Image(f.toURI().toString(), CARD_W, CARD_IMG, true, true));
+                iv.setFitWidth(CARD_W);
+                iv.setFitHeight(CARD_IMG);
                 iv.setPreserveRatio(true);
-                imgBox.getChildren().add(iv);
+                imgArea.getChildren().add(iv);
             } else {
-                imgBox.getChildren().add(placeholder(p.getCategory()));
+                imgArea.getChildren().add(categoryIcon(p.getCategory()));
             }
         } else {
-            imgBox.getChildren().add(placeholder(p.getCategory()));
+            imgArea.getChildren().add(categoryIcon(p.getCategory()));
         }
-        card.getChildren().add(imgBox);
 
-        // Name
+        // ── Info area ────────────────────────────────────────────────────────
+        VBox info = new VBox(4);
+        info.getStyleClass().add("product-card-info");
+        info.setPadding(new Insets(10, 12, 6, 12));
+
+        String cat = p.getCategory() != null ? p.getCategory() : "Other";
+        Label catChip = new Label(cat);
+        catChip.getStyleClass().addAll("category-chip", "category-" + cat.toLowerCase());
+
         Label name = new Label(p.getName());
-        name.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+        name.getStyleClass().add("product-card-name");
         name.setWrapText(true);
-        name.setMaxWidth(135);
+        name.setMaxWidth(CARD_W - 24.0);
 
-        // Price
         Label price = new Label(String.format("$%.2f / %s", p.getPrice(), p.getUnit()));
-        price.setStyle("-fx-text-fill: #2E7D32; -fx-font-size: 11px;");
+        price.getStyleClass().add("product-card-price");
 
-        // Stock
-        Label stock = new Label("Stock: " + p.getQuantity());
-        stock.setStyle("-fx-text-fill: #757575; -fx-font-size: 10px;");
+        // Stock hint  (orange badge when still pending review)
+        Label stockLbl = new Label("Stock: " + p.getQuantity());
+        stockLbl.setStyle("-fx-font-size: 10px; -fx-text-fill: #757575;");
 
-        // Add button
-        Button add = new Button(p.getQuantity() > 0 ? "Add to Order" : "Out of Stock");
-        add.getStyleClass().add("btn-primary");
-        add.setMaxWidth(Double.MAX_VALUE);
-        add.setDisable(p.getQuantity() == 0);
-        add.setOnAction(e -> onAddToCart(p));
+        if (pending) {
+            Label pendingBadge = new Label("Pending review");
+            pendingBadge.setStyle(
+                "-fx-font-size: 9px; -fx-text-fill: white; -fx-background-color: #FB8C00;" +
+                "-fx-background-radius: 3; -fx-padding: 1 5 1 5; -fx-font-weight: bold;");
+            info.getChildren().addAll(catChip, name, price, stockLbl, pendingBadge);
+        } else {
+            info.getChildren().addAll(catChip, name, price, stockLbl);
+        }
 
-        card.getChildren().addAll(name, price, stock, add);
+        // ── Button area ──────────────────────────────────────────────────────
+        VBox btnArea = new VBox();
+        btnArea.getStyleClass().add("card-actions");
+        btnArea.setPadding(new Insets(8, 12, 12, 12));
+
+        Button addBtn = new Button(orderable ? "+ Add to Cart" : "Out of Stock");
+        addBtn.getStyleClass().add("btn-primary");
+        addBtn.setMaxWidth(Double.MAX_VALUE);
+        addBtn.setDisable(!orderable);
+        // Consume the raw mouse event on the button so it does NOT bubble up
+        // to the card's onMouseClicked handler — the ActionEvent still fires.
+        addBtn.addEventFilter(MouseEvent.MOUSE_CLICKED, MouseEvent::consume);
+        addBtn.setOnAction(e -> onAddToCart(p));
+        btnArea.getChildren().add(addBtn);
+
+        card.getChildren().addAll(imgArea, info, btnArea);
         return card;
     }
 
-    private Label placeholder(String category) {
-        String text = category != null ? category.substring(0, Math.min(3, category.length())) : "?";
-        Label lbl = new Label(text);
-        lbl.setStyle("-fx-text-fill: #9E9E9E; -fx-font-size: 13px;");
+    /** Large emoji icon shown when a product has no image file. */
+    private Label categoryIcon(String category) {
+        String icon = switch (category != null ? category : "") {
+            case "Fruits"     -> "🍎";
+            case "Vegetables" -> "🥦";
+            case "Grains"     -> "🌾";
+            case "Dairy"      -> "🥛";
+            case "Livestock"  -> "🐄";
+            default           -> "🌿";
+        };
+        Label lbl = new Label(icon);
+        lbl.getStyleClass().add("image-placeholder-text");
         return lbl;
     }
 
@@ -393,11 +451,25 @@ public class OrderController {
     private void updateTotals() {
         double total = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
         totalLabel.setText(String.format("$%.2f", total));
+        ExchangeRateService fx = ExchangeRateService.getInstance();
+        if (total > 0) {
+            totalTndLabel.setText("≈ " + fx.formatTnd(total));
+        } else {
+            totalTndLabel.setText("");
+        }
     }
 
     @FXML void onClearCart() {
         cartItems.clear();
         updateTotals();
+    }
+
+    /** Enables / disables the phone field based on the SMS checkbox state. */
+    @FXML
+    void onSmsToggle() {
+        boolean checked = smsCheckBox.isSelected();
+        phoneField.setDisable(!checked);
+        if (!checked) phoneField.clear();
     }
 
     @FXML
@@ -407,17 +479,24 @@ public class OrderController {
             orderFormError.setText("Add at least one product to the order.");
             return;
         }
-        String address = shippingField.getText().trim();
-        if (address.isBlank()) {
-            orderFormError.setText("Shipping address is required.");
+
+        // Validate phone number early if SMS is opted in
+        boolean wantSms = smsCheckBox.isSelected();
+        String  phone   = wantSms ? phoneField.getText().trim() : "";
+        if (wantSms && phone.isBlank()) {
+            orderFormError.setText("Enter a phone number to receive SMS, or uncheck the SMS option.");
             return;
         }
 
+        // Snapshot cart summary for the SMS message (cart cleared after order)
+        int    itemCount  = cartItems.size();
+        double cartTotal  = cartItems.stream().mapToDouble(CartItem::getSubtotal).sum();
+        String firstItem  = cartItems.get(0).getProduct().getName();
+
         Order order = new Order();
-        order.setShippingAddress(address);
-        order.setShippingCity(cityField.getText().trim());
-        order.setShippingPostal(postalField.getText().trim());
-        order.setNotes(notesField.getText().trim());
+        String notes = notesField.getText() == null ? "" : notesField.getText().trim();
+        order.setNotes(notes.isBlank() ? null : notes);
+        order.setDeliveryDate(deliveryDatePicker.getValue());
 
         List<OrderDetail> details = new ArrayList<>();
         for (CartItem ci : cartItems) {
@@ -429,18 +508,47 @@ public class OrderController {
 
         try {
             orderService.createOrder(order, details, UserSession.getInstance().getCurrentUser());
-            MainApp.getInstance().showToast("Order placed successfully!", "success");
             cartItems.clear();
             updateTotals();
-            shippingField.clear();
-            cityField.clear();
-            postalField.clear();
             notesField.clear();
-            loadProductPage();    // refresh stock numbers
+            deliveryDatePicker.setValue(null);
+            loadProductPage();
             loadOrderPage();
             if (mainController != null) mainController.notifyProductsChanged();
+
+            // ── SMS notification (best-effort – order is already saved) ────────
+            if (wantSms) {
+                trySendSms(phone, itemCount, firstItem, cartTotal);
+            } else {
+                MainApp.getInstance().showToast("Order placed successfully!", "success");
+            }
+
         } catch (Exception e) {
             orderFormError.setText(e.getMessage());
+        }
+    }
+
+    /**
+     * Sends an SMS confirmation. If it fails the order is NOT rolled back;
+     * the user sees a warning toast instead.
+     */
+    private void trySendSms(String phone, int itemCount, String firstItem, double total) {
+        String extra = itemCount > 1 ? " (+" + (itemCount - 1) + " more)" : "";
+        String msg = "AgriCloud Order Confirmed!\n"
+                + "Product: " + firstItem + extra + "\n"
+                + "Total: $" + String.format("%.2f", total) + "\n"
+                + "Status: Pending\n"
+                + "Thank you for your order!";
+        try {
+            smsService.send(phone, msg);
+            String toast = smsService.isDemo()
+                    ? "Order saved \u2705 SMS sent (demo)"
+                    : "Order placed & SMS sent to " + phone + "!";
+            MainApp.getInstance().showToast(toast, "success");
+        } catch (Exception smsEx) {
+            System.err.println("[SMS] Failed: " + smsEx.getMessage());
+            MainApp.getInstance().showToast(
+                    "Order saved, but SMS failed: " + smsEx.getMessage(), "error");
         }
     }
 
@@ -483,17 +591,27 @@ public class OrderController {
     private void setupOrdersTable() {
         TableColumn<Order, String> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(p -> new SimpleStringProperty("#" + p.getValue().getId()));
-        idCol.setPrefWidth(55);
+        idCol.setPrefWidth(50);
+
+        TableColumn<Order, String> productCol = new TableColumn<>("Product");
+        productCol.setCellValueFactory(p -> new SimpleStringProperty(
+                p.getValue().getProductName() != null ? p.getValue().getProductName() : "—"));
+        productCol.setPrefWidth(140);
+
+        TableColumn<Order, String> qtyCol = new TableColumn<>("Qty");
+        qtyCol.setCellValueFactory(p -> new SimpleStringProperty(
+                p.getValue().getQuantity() + " " + nvl(p.getValue().getProductUnit())));
+        qtyCol.setPrefWidth(70);
 
         TableColumn<Order, String> dateCol = new TableColumn<>("Date");
         dateCol.setCellValueFactory(p ->
                 new SimpleStringProperty(p.getValue().getFormattedDate()));
-        dateCol.setPrefWidth(110);
+        dateCol.setPrefWidth(100);
 
         TableColumn<Order, String> totalCol = new TableColumn<>("Total");
         totalCol.setCellValueFactory(p -> new SimpleStringProperty(
                 String.format("$%.2f", p.getValue().getTotalPrice())));
-        totalCol.setPrefWidth(80);
+        totalCol.setPrefWidth(75);
 
         TableColumn<Order, String> statusCol = new TableColumn<>("Status");
         statusCol.setCellValueFactory(p ->
@@ -543,7 +661,7 @@ public class OrderController {
         actionsCol.setPrefWidth(160);
         actionsCol.setSortable(false);
 
-        ordersTable.getColumns().addAll(idCol, dateCol, totalCol, statusCol, actionsCol);
+        ordersTable.getColumns().addAll(idCol, productCol, qtyCol, dateCol, totalCol, statusCol, actionsCol);
         ordersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         ordersTable.setPlaceholder(new Label("No orders yet."));
 
@@ -671,14 +789,6 @@ public class OrderController {
         statusCombo.setValue(order.getStatus());
         statusCombo.setMaxWidth(Double.MAX_VALUE);
 
-        // Shipping
-        TextField addrField   = new TextField(nvl(order.getShippingAddress()));
-        TextField cityFld     = new TextField(nvl(order.getShippingCity()));
-        TextField postalFld   = new TextField(nvl(order.getShippingPostal()));
-        TextArea  notesFld    = new TextArea(nvl(order.getNotes()));
-        notesFld.setPrefRowCount(2);
-        notesFld.setWrapText(true);
-
         // Editable items table inside the drawer
         TableView<CartItem> editTable = new TableView<>(editCart);
         editTable.setPrefHeight(180);
@@ -743,10 +853,6 @@ public class OrderController {
                 newDetails.add(d);
             }
             order.setStatus(statusCombo.getValue());
-            order.setShippingAddress(addrField.getText().trim());
-            order.setShippingCity(cityFld.getText().trim());
-            order.setShippingPostal(postalFld.getText().trim());
-            order.setNotes(notesFld.getText().trim());
             try {
                 orderService.updateOrder(order, newDetails,
                         UserSession.getInstance().getCurrentUser());
@@ -762,9 +868,6 @@ public class OrderController {
         panel.getChildren().addAll(
                 title,
                 labeled("Status", statusCombo),
-                labeled("Shipping Address", addrField),
-                new HBox(8, withLabel("City", cityFld), withLabel("Postal", postalFld)),
-                labeled("Notes", notesFld),
                 new Label("Items:"),
                 editTable,
                 drawerError,
@@ -814,6 +917,186 @@ public class OrderController {
     private void closeDrawer() {
         rootStack.getChildren().remove(drawerOverlay);
         drawerOverlay = null;
+    }
+
+    // =========================================================================
+    // ── PDF EXPORT ───────────────────────────────────────────────────────────
+    // =========================================================================
+
+    @FXML
+    void onExportPdf() {
+        Order o = ordersTable.getSelectionModel().getSelectedItem();
+        if (o == null) {
+            MainApp.getInstance().showToast("Select an order first.", "error");
+            return;
+        }
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save Order PDF");
+        chooser.setInitialFileName("Order_" + o.getId() + ".pdf");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Files", "*.pdf"));
+        Stage stage = (Stage) rootStack.getScene().getWindow();
+        File file = chooser.showSaveDialog(stage);
+        if (file == null) return;
+
+        try (PDDocument doc = new PDDocument()) {
+            PDPage page = new PDPage(PDRectangle.A4);
+            doc.addPage(page);
+
+            try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+                float m  = 50;
+                float pw = page.getMediaBox().getWidth();
+                float y  = page.getMediaBox().getHeight() - m;
+
+                // ── Header bar ───────────────────────────────────────────────
+                cs.setNonStrokingColor(0.18f, 0.49f, 0.20f); // green
+                cs.addRect(m, y - 6, pw - 2 * m, 34);
+                cs.fill();
+                cs.setNonStrokingColor(0, 0, 0);
+
+                cs.beginText();
+                cs.setFont(PDType1Font.HELVETICA_BOLD, 18);
+                cs.setNonStrokingColor(1f, 1f, 1f);
+                cs.newLineAtOffset(m + 8, y + 4);
+                cs.showText("AgriCloud  –  Order Receipt");
+                cs.endText();
+                cs.setNonStrokingColor(0f, 0f, 0f);
+                y -= 50;
+
+                // ── Order meta ───────────────────────────────────────────────
+                String delivDateStr = o.getDeliveryDate() != null
+                        ? o.getDeliveryDate().format(DATE_FMT) : "—";
+                String notesStr = o.getNotes() != null && !o.getNotes().isBlank()
+                        ? o.getNotes() : "—";
+                if (notesStr.length() > 60) notesStr = notesStr.substring(0, 57) + "...";
+                String[][] meta = {
+                    {"Order #",        String.valueOf(o.getId())},
+                    {"Date",           o.getFormattedDate()},
+                    {"Status",         pdfSafe(o.getStatus())},
+                    {"Customer ID",    String.valueOf(o.getCustomerId())},
+                    {"Delivery Date",  pdfSafe(delivDateStr)},
+                    {"Notes",          pdfSafe(notesStr)},
+                };
+                for (String[] row : meta) {
+                    cs.beginText();
+                    cs.setFont(PDType1Font.HELVETICA_BOLD, 10);
+                    cs.newLineAtOffset(m, y);
+                    cs.showText(row[0] + ":");
+                    cs.endText();
+                    cs.beginText();
+                    cs.setFont(PDType1Font.HELVETICA, 10);
+                    cs.newLineAtOffset(m + 100, y);
+                    cs.showText(row[1]);
+                    cs.endText();
+                    y -= 15;
+                }
+                y -= 10;
+
+                // ── Divider ──────────────────────────────────────────────────
+                cs.setLineWidth(0.8f);
+                cs.moveTo(m, y); cs.lineTo(pw - m, y); cs.stroke();
+                y -= 18;
+
+                // ── Product details table ─────────────────────────────────────
+                float c1 = m, c2 = m + 200, c3 = m + 290, c4 = m + 370, c5 = m + 450;
+
+                // Table header
+                cs.setNonStrokingColor(0.93f, 0.93f, 0.93f);
+                cs.addRect(m, y - 4, pw - 2 * m, 18);
+                cs.fill();
+                cs.setNonStrokingColor(0f, 0f, 0f);
+
+                for (String[] hdr : new String[][]{
+                        {String.valueOf(c1),"Product"},
+                        {String.valueOf(c2),"Category"},
+                        {String.valueOf(c3),"Qty"},
+                        {String.valueOf(c4),"Unit Price"},
+                        {String.valueOf(c5),"Total"}}) {
+                    cs.beginText();
+                    cs.setFont(PDType1Font.HELVETICA_BOLD, 9);
+                    cs.newLineAtOffset(Float.parseFloat(hdr[0]) + 2, y);
+                    cs.showText(hdr[1]);
+                    cs.endText();
+                }
+                y -= 20;
+
+                // Single product row (one order = one product)
+                String name = pdfSafe(o.getProductName() != null ? o.getProductName() : "Unknown");
+                if (name.length() > 28) name = name.substring(0, 25) + "...";
+                String cat  = pdfSafe(o.getProductCategory() != null ? o.getProductCategory() : "—");
+                String unit = pdfSafe(nvl(o.getProductUnit()));
+
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA, 10);
+                cs.newLineAtOffset(c1 + 2, y); cs.showText(name); cs.endText();
+
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA, 10);
+                cs.newLineAtOffset(c2 + 2, y); cs.showText(cat); cs.endText();
+
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA, 10);
+                cs.newLineAtOffset(c3 + 2, y);
+                cs.showText(o.getQuantity() + (unit.isBlank() ? "" : " " + unit));
+                cs.endText();
+
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA, 10);
+                cs.newLineAtOffset(c4 + 2, y);
+                cs.showText(String.format("$%.2f", o.getUnitPrice()));
+                cs.endText();
+
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA, 10);
+                cs.newLineAtOffset(c5 + 2, y);
+                cs.showText(String.format("$%.2f", o.getTotalPrice()));
+                cs.endText();
+                y -= 24;
+
+                // ── Total row ────────────────────────────────────────────────
+                cs.setLineWidth(0.5f);
+                cs.moveTo(m, y); cs.lineTo(pw - m, y); cs.stroke();
+                y -= 16;
+
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA_BOLD, 11);
+                cs.newLineAtOffset(c4, y); cs.showText("TOTAL"); cs.endText();
+
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA_BOLD, 11);
+                cs.newLineAtOffset(c5, y);
+                cs.showText(String.format("$%.2f", o.getTotalPrice()));
+                cs.endText();
+                y -= 30;
+
+                // ── Status badge ─────────────────────────────────────────────
+                String status = nvl(o.getStatus()).toUpperCase();
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA_BOLD, 9);
+                cs.newLineAtOffset(m, y);
+                cs.showText("Order Status: " + status);
+                cs.endText();
+                y -= 30;
+
+                // ── Footer ───────────────────────────────────────────────────
+                cs.setLineWidth(0.5f);
+                cs.moveTo(m, y); cs.lineTo(pw - m, y); cs.stroke();
+                y -= 14;
+                cs.beginText(); cs.setFont(PDType1Font.HELVETICA, 8);
+                cs.newLineAtOffset(m, y);
+                cs.showText("Generated by AgriCloud Farm Management System");
+                cs.endText();
+            }
+
+            doc.save(file);
+            MainApp.getInstance().showToast("PDF saved: " + file.getName(), "success");
+
+        } catch (Exception e) {
+            MainApp.getInstance().showToast("PDF export failed: " + e.getMessage(), "error");
+            e.printStackTrace();
+        }
+    }
+
+    /** Sanitise a string for PDType1Font (WinAnsiEncoding: chars 32-255). */
+    private String pdfSafe(String text) {
+        if (text == null) return "";
+        StringBuilder sb = new StringBuilder();
+        for (char c : text.toCharArray()) {
+            sb.append((c >= 32 && c <= 255) ? c : '?');
+        }
+        return sb.toString();
     }
 
     // =========================================================================
@@ -869,15 +1152,6 @@ public class OrderController {
         Label lbl = new Label(text);
         lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #757575;");
         box.getChildren().addAll(lbl, control);
-        return box;
-    }
-
-    private VBox withLabel(String text, TextField field) {
-        VBox box = new VBox(4);
-        Label lbl = new Label(text);
-        lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: #757575;");
-        box.getChildren().addAll(lbl, field);
-        HBox.setHgrow(box, Priority.ALWAYS);
         return box;
     }
 

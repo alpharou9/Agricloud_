@@ -3,6 +3,8 @@ module agrticloud {
     requires javafx.fxml;
     requires javafx.graphics;
     requires java.sql;
+    requires java.net.http;
+    requires org.apache.pdfbox;
 
     opens org.example to javafx.graphics, javafx.fxml, javafx.base, javafx.controls;
     opens org.example.model to javafx.graphics, javafx.fxml, javafx.base, javafx.controls;

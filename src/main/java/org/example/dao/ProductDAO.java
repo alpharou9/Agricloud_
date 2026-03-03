@@ -120,6 +120,53 @@ public class ProductDAO {
         return 0;
     }
 
+    /**
+     * Returns all in-stock, non-rejected products for the order catalog.
+     * Includes 'approved' (orderable) and 'pending' (visible but not orderable).
+     */
+    public List<Product> getCatalogPage(String search, int pageSize, int offset)
+            throws SQLException {
+        List<Product> list = new ArrayList<>();
+        String like = "%" + (search == null ? "" : search.trim()) + "%";
+        String sql = """
+            SELECT * FROM products
+             WHERE status IN ('approved', 'pending')
+               AND quantity > 0
+               AND (name LIKE ? OR description LIKE ?)
+             ORDER BY status DESC, name
+             LIMIT ? OFFSET ?
+            """;
+        try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
+            ps.setString(1, like);
+            ps.setString(2, like);
+            ps.setInt(3, pageSize);
+            ps.setInt(4, offset);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        }
+        return list;
+    }
+
+    /** Total count for the order catalog (approved + pending, in-stock). */
+    public int countCatalog(String search) throws SQLException {
+        String like = "%" + (search == null ? "" : search.trim()) + "%";
+        String sql = """
+            SELECT COUNT(*) FROM products
+             WHERE status IN ('approved', 'pending')
+               AND quantity > 0
+               AND (name LIKE ? OR description LIKE ?)
+            """;
+        try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement(sql)) {
+            ps.setString(1, like);
+            ps.setString(2, like);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
     public List<Product> getLowStockProducts(int threshold) throws SQLException {
         List<Product> list = new ArrayList<>();
         String sql = "SELECT * FROM products WHERE quantity <= ? AND status != 'sold_out'";

@@ -1,10 +1,6 @@
 package org.example.controller;
 
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -44,7 +40,7 @@ public class ProductController {
     // FXML bindings
     // -------------------------------------------------------------------------
     @FXML private StackPane rootStack;
-    @FXML private TableView<Product> productTable;
+    @FXML private FlowPane  productGrid;
     @FXML private TextField searchField;
     @FXML private ComboBox<String> filterCategoryCombo;
     @FXML private ComboBox<String> filterStatusCombo;
@@ -98,120 +94,8 @@ public class ProductController {
 
     @FXML
     public void initialize() {
-        setupTable();
         setupFilters();
         refreshGrid();
-    }
-
-    @SuppressWarnings("unchecked")
-    private void setupTable() {
-        // Image column
-        TableColumn<Product, String> imgCol = new TableColumn<>("Image");
-        imgCol.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getImage()));
-        imgCol.setCellFactory(col -> new TableCell<>() {
-            private final ImageView iv = new ImageView();
-            {
-                iv.setFitWidth(50);
-                iv.setFitHeight(50);
-                iv.setPreserveRatio(true);
-            }
-            @Override
-            protected void updateItem(String imagePath, boolean empty) {
-                super.updateItem(imagePath, empty);
-                if (empty) { setGraphic(null); return; }
-                if (imagePath != null && !imagePath.isBlank()) {
-                    File f = new File(imagePath);
-                    if (f.exists()) {
-                        iv.setImage(new Image(f.toURI().toString(), 50, 50, true, true));
-                        setGraphic(iv);
-                        return;
-                    }
-                }
-                Label placeholder = new Label("—");
-                placeholder.setStyle("-fx-text-fill: #9E9E9E;");
-                setGraphic(placeholder);
-            }
-        });
-        imgCol.setPrefWidth(65);
-        imgCol.setSortable(false);
-
-        TableColumn<Product, String> nameCol = new TableColumn<>("Name");
-        nameCol.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getName()));
-        nameCol.setPrefWidth(160);
-
-        TableColumn<Product, String> catCol = new TableColumn<>("Category");
-        catCol.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getCategory()));
-        catCol.setPrefWidth(100);
-
-        TableColumn<Product, String> priceCol = new TableColumn<>("Price");
-        priceCol.setCellValueFactory(p -> new SimpleStringProperty(
-                String.format("$%.2f / %s", p.getValue().getPrice(), p.getValue().getUnit())));
-        priceCol.setPrefWidth(110);
-
-        TableColumn<Product, String> stockCol = new TableColumn<>("Stock");
-        stockCol.setCellValueFactory(p -> {
-            Product prod = p.getValue();
-            String text = prod.getQuantity() + " " + prod.getUnit();
-            if (prod.getQuantity() <= LOW_STOCK_THRESHOLD && prod.getQuantity() > 0)
-                text += "  ⚠ LOW";
-            return new SimpleStringProperty(text);
-        });
-        stockCol.setPrefWidth(100);
-
-        TableColumn<Product, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getStatus()));
-        statusCol.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String status, boolean empty) {
-                super.updateItem(status, empty);
-                if (empty || status == null) { setGraphic(null); setText(null); return; }
-                Label badge = new Label(status);
-                badge.getStyleClass().addAll("status-badge", "status-" + status);
-                setGraphic(badge);
-                setText(null);
-            }
-        });
-        statusCol.setPrefWidth(90);
-
-        TableColumn<Product, Product> actionsCol = new TableColumn<>("Actions");
-        actionsCol.setCellValueFactory(p -> new ReadOnlyObjectWrapper<>(p.getValue()));
-        actionsCol.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(Product p, boolean empty) {
-                super.updateItem(p, empty);
-                if (empty || p == null) { setGraphic(null); return; }
-                HBox box = new HBox(6);
-                box.setAlignment(Pos.CENTER_LEFT);
-                User user = UserSession.getInstance().getCurrentUser();
-                boolean canEditDelete = user.getRole() == User.Role.ADMIN ||
-                                        p.getUserId() == user.getId();
-                if (canEditDelete) {
-                    Button edit = new Button("Edit");
-                    edit.getStyleClass().add("btn-secondary");
-                    edit.setOnAction(e -> openDrawer(p));
-                    Button delete = new Button("Delete");
-                    delete.getStyleClass().add("btn-danger");
-                    delete.setOnAction(e -> confirmDelete(p));
-                    box.getChildren().addAll(edit, delete);
-                }
-                if (user.getRole() == User.Role.ADMIN && "pending".equals(p.getStatus())) {
-                    Button approve = new Button("Approve");
-                    approve.getStyleClass().add("btn-success");
-                    approve.setOnAction(e -> approveProduct(p));
-                    Button reject = new Button("Reject");
-                    reject.getStyleClass().add("btn-danger");
-                    reject.setOnAction(e -> rejectProduct(p));
-                    box.getChildren().addAll(approve, reject);
-                }
-                setGraphic(box);
-            }
-        });
-        actionsCol.setPrefWidth(220);
-        actionsCol.setSortable(false);
-
-        productTable.getColumns().addAll(imgCol, nameCol, catCol, priceCol, stockCol, statusCol, actionsCol);
-        productTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        productTable.setFixedCellSize(60);
     }
 
     public void setMainController(MainController mc) {
@@ -296,8 +180,134 @@ public class ProductController {
                 })
                 .collect(Collectors.toList());
 
-        productTable.setItems(FXCollections.observableArrayList(filtered));
-        productTable.setPlaceholder(new Label("No products found."));
+        productGrid.getChildren().clear();
+        if (filtered.isEmpty()) {
+            Label empty = new Label("No products found.");
+            empty.setStyle("-fx-text-fill: #9E9E9E; -fx-font-size: 13px;");
+            productGrid.getChildren().add(empty);
+        } else {
+            for (Product p : filtered) {
+                productGrid.getChildren().add(buildProductCard(p));
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Product card builder
+    // -------------------------------------------------------------------------
+
+    private Node buildProductCard(Product p) {
+        VBox card = new VBox(6);
+        card.setPrefWidth(162);
+        card.setMaxWidth(162);
+        card.setAlignment(Pos.TOP_CENTER);
+        card.setStyle(
+            "-fx-background-color: white;" +
+            "-fx-background-radius: 10;" +
+            "-fx-border-color: #E8E8E8;" +
+            "-fx-border-radius: 10;" +
+            "-fx-border-width: 1;" +
+            "-fx-effect: dropshadow(gaussian,rgba(0,0,0,0.08),8,0,0,2);" +
+            "-fx-padding: 12;");
+
+        // ── Image / emoji ──────────────────────────────────────────────────────
+        StackPane imgBox = new StackPane();
+        imgBox.setPrefSize(138, 100);
+        imgBox.setMaxWidth(Double.MAX_VALUE);
+        imgBox.setAlignment(Pos.CENTER);
+        imgBox.setStyle("-fx-background-color: #F5F5F5; -fx-background-radius: 7;");
+
+        File imgFile = (p.getImage() != null && !p.getImage().isBlank())
+                ? new File(p.getImage()) : null;
+        if (imgFile != null && imgFile.exists()) {
+            ImageView iv = new ImageView(
+                    new Image(imgFile.toURI().toString(), 138, 100, true, true));
+            iv.setFitWidth(138);
+            iv.setFitHeight(100);
+            iv.setPreserveRatio(true);
+            imgBox.getChildren().add(iv);
+        } else {
+            Label emoji = new Label(categoryEmoji(p.getCategory()));
+            emoji.setStyle("-fx-font-size: 38px;");
+            imgBox.getChildren().add(emoji);
+        }
+
+        // ── Name ───────────────────────────────────────────────────────────────
+        Label name = new Label(p.getName());
+        name.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-alignment: center;");
+        name.setWrapText(true);
+        name.setMaxWidth(138);
+
+        // ── Category ───────────────────────────────────────────────────────────
+        Label cat = new Label(p.getCategory() != null ? p.getCategory() : "");
+        cat.setStyle("-fx-font-size: 10px; -fx-text-fill: #9E9E9E;");
+
+        // ── Price ──────────────────────────────────────────────────────────────
+        Label price = new Label(String.format("$%.2f / %s", p.getPrice(), p.getUnit()));
+        price.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: #2E7D32;");
+
+        // ── Stock ──────────────────────────────────────────────────────────────
+        boolean lowStock = p.getQuantity() > 0 && p.getQuantity() <= LOW_STOCK_THRESHOLD;
+        String stockText = "Stock: " + p.getQuantity() + " " + p.getUnit()
+                + (lowStock ? " ⚠" : "");
+        Label stock = new Label(stockText);
+        stock.setStyle("-fx-font-size: 10px; -fx-text-fill: " + (lowStock ? "#E65100;" : "#555;"));
+
+        // ── Status badge ───────────────────────────────────────────────────────
+        Label badge = new Label(p.getStatus() != null ? p.getStatus() : "");
+        badge.getStyleClass().addAll("status-badge", "status-" + p.getStatus());
+
+        // ── Action buttons ─────────────────────────────────────────────────────
+        HBox actions = new HBox(5);
+        actions.setAlignment(Pos.CENTER);
+
+        User user = UserSession.getInstance().getCurrentUser();
+        boolean canEditDelete = user.getRole() == User.Role.ADMIN
+                || p.getUserId() == user.getId();
+
+        if (canEditDelete) {
+            Button edit = new Button("Edit");
+            edit.getStyleClass().add("btn-secondary");
+            edit.setStyle("-fx-font-size: 10px; -fx-padding: 3 7;");
+            edit.setOnAction(e -> openDrawer(p));
+
+            Button delete = new Button("Del");
+            delete.getStyleClass().add("btn-danger");
+            delete.setStyle("-fx-font-size: 10px; -fx-padding: 3 7;");
+            delete.setOnAction(e -> confirmDelete(p));
+
+            actions.getChildren().addAll(edit, delete);
+        }
+
+        if (user.getRole() == User.Role.ADMIN && "pending".equals(p.getStatus())) {
+            Button approve = new Button("✓");
+            approve.getStyleClass().add("btn-success");
+            approve.setStyle("-fx-font-size: 11px; -fx-padding: 3 7;");
+            approve.setOnAction(e -> approveProduct(p));
+
+            Button reject = new Button("✗");
+            reject.getStyleClass().add("btn-danger");
+            reject.setStyle("-fx-font-size: 11px; -fx-padding: 3 7;");
+            reject.setOnAction(e -> rejectProduct(p));
+
+            actions.getChildren().addAll(approve, reject);
+        }
+
+        card.getChildren().addAll(imgBox, name, cat, price, stock, badge, actions);
+        return card;
+    }
+
+    /** Returns a representative emoji for a product category. */
+    private String categoryEmoji(String cat) {
+        if (cat == null) return "🌾";
+        return switch (cat) {
+            case "Fruits"     -> "🍎";
+            case "Vegetables" -> "🥦";
+            case "Grains"     -> "🌾";
+            case "Dairy"      -> "🥛";
+            case "Livestock"  -> "🐄";
+            default           -> "📦";
+        };
     }
 
     // -------------------------------------------------------------------------
