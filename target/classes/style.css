@@ -946,3 +946,135 @@
 .status-shipped    { -fx-background-color: #00ACC1; }
 .status-delivered  { -fx-background-color: #43A047; }
 .status-cancelled  { -fx-background-color: #E53935; }
+
+/* ================================================================
+   FEATURE: EXCHANGE RATE / CURRENCY TOGGLE
+   ================================================================ */
+
+.currency-toggle-group {
+    -fx-background-color: -agri-border;
+    -fx-background-radius: 6;
+    -fx-padding: 2;
+}
+
+.currency-btn-left {
+    -fx-background-color: transparent;
+    -fx-text-fill: -agri-text-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 4 0 0 4;
+    -fx-cursor: hand;
+}
+.currency-btn-right {
+    -fx-background-color: transparent;
+    -fx-text-fill: -agri-text-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 0 4 4 0;
+    -fx-cursor: hand;
+}
+.currency-btn-left:selected,
+.currency-btn-right:selected {
+    -fx-background-color: -agri-green;
+    -fx-text-fill: white;
+}
+.currency-btn-left:hover,
+.currency-btn-right:hover {
+    -fx-background-color: -agri-green-bg;
+}
+
+.rate-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -agri-text-muted;
+    -fx-padding: 0 0 4 0;
+}
+
+/* ================================================================
+   FEATURE: NOTIFICATION BELL
+   ================================================================ */
+
+.bell-pane {
+    -fx-cursor: hand;
+}
+
+.bell-btn {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-text-fill: #AAAAAA;
+    -fx-font-size: 13px;
+    -fx-padding: 9 14 9 14;
+    -fx-background-radius: 8;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+}
+.bell-btn:hover {
+    -fx-background-color: rgba(255,255,255,0.18);
+    -fx-text-fill: white;
+}
+
+.bell-badge {
+    -fx-background-color: #E53935;
+    -fx-text-fill: white;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-min-width: 17;
+    -fx-min-height: 17;
+    -fx-max-width: 17;
+    -fx-max-height: 17;
+    -fx-background-radius: 10;
+    -fx-alignment: CENTER;
+    /* position top-right of the StackPane */
+    -fx-translate-x: 14;
+    -fx-translate-y: -8;
+}
+
+/* ================================================================
+   FEATURE: ANALYTICS PAGE
+   ================================================================ */
+
+/* Period selector buttons */
+.period-btn {
+    -fx-background-color: -agri-border;
+    -fx-text-fill: -agri-text-muted;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 5;
+    -fx-cursor: hand;
+}
+.period-btn:hover {
+    -fx-background-color: -agri-green-bg;
+    -fx-text-fill: -agri-green;
+}
+.period-btn-active {
+    -fx-background-color: -agri-green;
+    -fx-text-fill: white;
+}
+
+/* JavaFX chart dark-mode overrides (applied via CSS variables) */
+.chart-plot-background   { -fx-background-color: -agri-card; }
+.chart-background        { -fx-background-color: transparent; }
+.chart-content           { -fx-background-color: transparent; }
+.chart-legend            { -fx-background-color: transparent; }
+.chart-vertical-grid-lines   { -fx-stroke: -agri-border; }
+.chart-horizontal-grid-lines { -fx-stroke: -agri-border; }
+.chart-alternative-row-fill  { -fx-fill: transparent; -fx-stroke: transparent; }
+.chart-title             { -fx-text-fill: -agri-text; }
+.axis-label              { -fx-text-fill: -agri-text-muted; }
+.axis                    { -fx-tick-label-fill: -agri-text-muted; }
+
+/* Line chart series colour */
+.default-color0.chart-series-line { -fx-stroke: #4CAF50; -fx-stroke-width: 2.5px; }
+.default-color0.chart-line-symbol { -fx-background-color: #4CAF50, white; }
+
+/* Bar chart series colour */
+.default-color0.chart-bar { -fx-bar-fill: #4CAF50; }
+
+/* Pie chart slice colours */
+.default-color0.chart-pie { -fx-pie-color: #4CAF50; }
+.default-color1.chart-pie { -fx-pie-color: #2196F3; }
+.default-color2.chart-pie { -fx-pie-color: #FB8C00; }
+.default-color3.chart-pie { -fx-pie-color: #9C27B0; }
+.default-color4.chart-pie { -fx-pie-color: #00BCD4; }
+.default-color5.chart-pie { -fx-pie-color: #E53935; }
