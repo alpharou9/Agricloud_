@@ -236,6 +236,7 @@ public class BlogPostController implements Initializable {
         MenuButton translateBtn = new MenuButton("Translate");
         translateBtn.getStyleClass().add("btn-translate");
 
+        String[] currentLang = {"en"};
         MenuItem french = new MenuItem("French");
         String menuItemStyle = "-fx-text-fill: #1e293b; -fx-font-size: 13; -fx-background-color: white;";
         MenuItem spanish = new MenuItem("Spanish");
@@ -246,14 +247,14 @@ public class BlogPostController implements Initializable {
         MenuItem chinese = new MenuItem("Chinese");
         MenuItem japanese = new MenuItem("Japanese");
 
-        french.setOnAction(e -> translatePost(post, titleLabel, contentLabel, "fr"));
-        spanish.setOnAction(e -> translatePost(post, titleLabel, contentLabel, "es"));
-        arabic.setOnAction(e -> translatePost(post, titleLabel, contentLabel, "ar"));
-        german.setOnAction(e -> translatePost(post, titleLabel, contentLabel, "de"));
-        italian.setOnAction(e -> translatePost(post, titleLabel, contentLabel, "it"));
-        portuguese.setOnAction(e -> translatePost(post, titleLabel, contentLabel, "pt"));
-        chinese.setOnAction(e -> translatePost(post, titleLabel, contentLabel, "zh"));
-        japanese.setOnAction(e -> translatePost(post, titleLabel, contentLabel, "ja"));
+        french.setOnAction(e -> { currentLang[0] = "fr"; translatePost(post, titleLabel, contentLabel, "fr"); });
+        spanish.setOnAction(e -> { currentLang[0] = "es"; translatePost(post, titleLabel, contentLabel, "es"); });
+        arabic.setOnAction(e -> { currentLang[0] = "ar"; translatePost(post, titleLabel, contentLabel, "ar"); });
+        german.setOnAction(e -> { currentLang[0] = "de"; translatePost(post, titleLabel, contentLabel, "de"); });
+        italian.setOnAction(e -> { currentLang[0] = "it"; translatePost(post, titleLabel, contentLabel, "it"); });
+        portuguese.setOnAction(e -> { currentLang[0] = "pt"; translatePost(post, titleLabel, contentLabel, "pt"); });
+        chinese.setOnAction(e -> { currentLang[0] = "zh"; translatePost(post, titleLabel, contentLabel, "zh"); });
+        japanese.setOnAction(e -> { currentLang[0] = "ja"; translatePost(post, titleLabel, contentLabel, "ja"); });
 
         translateBtn.setStyle(translateBtn.getStyle() + " -fx-text-fill: #1e293b;");
         french.setStyle("-fx-text-fill: #1e293b;");
@@ -278,8 +279,8 @@ public class BlogPostController implements Initializable {
             } else {
                 speakBtn.setText("Stop");
                 speakBtn.setStyle("-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 8 16; -fx-background-radius: 6; -fx-font-size: 13;");
-                String textToRead = post.getTitle() + ". " + post.getContent();
-                TextToSpeechService.speak(textToRead);
+                String textToRead = titleLabel.getText() + ". " + contentLabel.getText();
+                TextToSpeechService.speak(textToRead, currentLang[0]);
             }
         });
 
